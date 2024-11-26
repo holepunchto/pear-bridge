@@ -32,7 +32,7 @@ module.exports = class Http extends ReadyResource {
 
         const [clientId, startId] = id.split('@')
 
-        if (await this.ipc.isClient(clientId) === false) throw ERR_HTTP_BAD_REQUEST('Bad Client ID')
+        if (await this.ipc.clientExists(clientId) === false) throw ERR_HTTP_BAD_REQUEST('Bad Client ID')
         
         const minver = await this.ipc.minver()
         if (minver !== null) {
@@ -92,7 +92,7 @@ module.exports = class Http extends ReadyResource {
   }
 
   async #lookup (protocol, type, req, res) {
-    if (this.ipc.isClosed()) throw ERR_HTTP_GONE()
+    if (this.ipc.closed()) throw ERR_HTTP_GONE()
 
     const url = `${protocol}://${type}${req.url}`
     let link = null
@@ -103,7 +103,7 @@ module.exports = class Http extends ReadyResource {
     let builtin = false
     if (link.filename === null) {
       link.filename = await this.ipc.linkerResolve(link.resolve, link.dirname, { isImport })
-      builtin = link.filename === link.resolve && await this.ipc.linkerHasBuiltins(link.resolve)
+      builtin = link.filename === link.resolve && await this.ipc.linkerHasBuiltin(link.resolve)
     }
 
     let isJS = false
@@ -131,7 +131,7 @@ module.exports = class Http extends ReadyResource {
       }
     }
 
-    if (await this.ipc.driveHas(link.filename) === false) {
+    if (await this.ipc.has(link.filename) === false) {
       if (link.filename === '/index.html') {
         const manifest = await this.ipc.get('/package.json')
         if (typeof manifest?.value?.main === 'string') {
