@@ -1,0 +1,27 @@
+{
+  "name": "pear-bridge",
+  "version": "0.0.0",
+  "description": "Local HTTP Bridge for Pear Desktop Applications",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "files": [
+    "client.js",
+    "server.js",
+    "errors.js",
+    "not-found.html"
+  ],
+  "keywords": ["pear", "pear-runtime", "http", "bridge", "ui", "desktop"],
+  "author": "Holepunch",
+  "license": "Apache-2.0",
+  "imports": {
+    "fs": "bare-fs",
+    "path": "bare-path",
+    "child_process": "bare-subprocess"
+  },
+  "dependencies": {
+    "pear-api": "^0.0.7",
+    "script-linker": "^2.5.3"
+  }
+}
