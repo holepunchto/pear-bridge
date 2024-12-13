@@ -1,3 +1,5 @@
+/* eslint-env browser */ /* global Pear */
+
 'use strict'
 const gunk = require('pear-api/gunk')
 const runtime = require('script-linker/runtime')

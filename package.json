@@ -12,7 +12,14 @@
     "errors.js",
     "not-found.html"
   ],
-  "keywords": ["pear", "pear-runtime", "http", "bridge", "ui", "desktop"],
+  "keywords": [
+    "pear",
+    "pear-runtime",
+    "http",
+    "bridge",
+    "ui",
+    "desktop"
+  ],
   "author": "Holepunch",
   "license": "Apache-2.0",
   "imports": {
@@ -21,7 +28,12 @@
     "child_process": "bare-subprocess"
   },
   "dependencies": {
-    "pear-api": "^0.0.7",
-    "script-linker": "^2.5.3"
+    "bare-http1": "^4.0.2",
+    "listen-async": "^1.0.0",
+    "mime-db": "^1.53.0",
+    "pear-api": "^0.0.14",
+    "ready-resource": "^1.1.1",
+    "script-linker": "^2.5.3",
+    "streamx": "^2.21.1"
   }
 }

@@ -1,3 +1,4 @@
+/* global Pear */
 'use strict'
 const http = require('bare-http1')
 const ScriptLinker = require('script-linker')
@@ -33,7 +34,7 @@ module.exports = class Http extends ReadyResource {
         const [clientId, startId] = id.split('@')
 
         if (await this.ipc.clientExists(clientId) === false) throw ERR_HTTP_BAD_REQUEST('Bad Client ID')
-        
+
         const minver = await this.ipc.minver()
         if (minver !== null) {
           res.setHeader('X-Minver', `key=${minver.key}&length=${minver.length}&fork=${minver.fork}`)
@@ -51,7 +52,7 @@ module.exports = class Http extends ReadyResource {
         } else if (err.code === 'SESSION_CLOSED') {
           err.status = err.status || 503
         } else {
-          LOG.error('internal', 'Unknown HTTP Server Error', err)
+          global.LOG.error('internal', 'Unknown HTTP Server Error', err)
           err.status = 500
         }
         res.setHeader('Content-Type', 'text/plain')
@@ -69,7 +70,7 @@ module.exports = class Http extends ReadyResource {
     this.port = null
   }
 
-  async #notFound (app, req, res) {
+  async #notFound (req, res) {
     res.setHeader('Content-Type', 'text/html; charset=utf-8')
     res.statusCode = 404
     const name = Pear.config.name
@@ -85,7 +86,7 @@ module.exports = class Http extends ReadyResource {
       if (reported?.err) throw ERR_HTTP_NOT_FOUND('Not Found - ' + (reported.err.code || 'ERR_UNKNOWN') + ' - ' + reported.err.message)
       return await this.#lookup(protocol, type, req, res)
     } catch (err) {
-      if (err.code === 'ERR_HTTP_NOT_FOUND') return await this.#notFound(app, req, res)
+      if (err.code === 'ERR_HTTP_NOT_FOUND') return await this.#notFound(req, res)
       throw err
     }
   }
@@ -135,7 +136,7 @@ module.exports = class Http extends ReadyResource {
         const manifest = await this.ipc.get('/package.json')
         if (typeof manifest?.value?.main === 'string') {
           req.url = `/${manifest?.value?.main}`
-          return this.#lookup(app, protocol, type, req, res)
+          return this.#lookup(protocol, type, req, res)
         }
       }
 
