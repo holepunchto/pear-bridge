@@ -67,7 +67,6 @@ module.exports = class Http extends ReadyResource {
 
     this.server.unref()
     this.port = null
-    this.host = null
   }
 
   async #notFound (app, req, res) {
@@ -76,7 +75,7 @@ module.exports = class Http extends ReadyResource {
     const name = Pear.config.name
     const { app } = await Pear.versions()
     const locals = { url: req.url, name, version: `v.${app.fork}.${app.length}.${app.key}` }
-    const stream = transform.stream(await this.ipc.get('./node_modules/pear-bridge/not-found.html'), locals)
+    const stream = transform.stream(await this.ipc.get('node_modules/pear-bridge/not-found.html'), locals)
     return await streamx.pipelinePromise(stream, res)
   }
 
@@ -177,7 +176,10 @@ module.exports = class Http extends ReadyResource {
   async _open () {
     await listen(this.server, 0, '127.0.0.1')
     this.port = this.server.address().port
-    this.host = `http://127.0.0.1:${this.port}`
+  }
+
+  info () {
+    return `{ "type": 'bridge', "data": "${'http://localhost:' + this.port}" }`
   }
 
   async _close () {
