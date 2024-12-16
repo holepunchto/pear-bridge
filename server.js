@@ -5,15 +5,42 @@ const ScriptLinker = require('script-linker')
 const ReadyResource = require('ready-resource')
 const streamx = require('streamx')
 const listen = require('listen-async')
+const gunk = require('pear-api/gunk')
 const transform = require('pear-api/transform')
 const Mime = require('./mime')
 const { ERR_HTTP_BAD_REQUEST, ERR_HTTP_GONE, ERR_HTTP_NOT_FOUND } = require('./errors')
 const mime = new Mime()
 
+// TODO: read, entry, clientExists sessionClosed,reported ipc handlers in sidecar
+// and remove script-linker from sidecar
+
+class PearDrive {
+  constructor (ipc) {
+    this.ipc = ipc
+  }
+
+  get (key) {
+    return this.ipc.read(key)
+  }
+
+  entry (key) {
+    return this.ipc.entry(key)
+  }
+}
+
 module.exports = class Http extends ReadyResource {
   constructor () {
     super()
     this.ipc = Pear[Pear.constructor.IPC]
+    this.drive = new PearDrive(this.ipc)
+    this.linker = new ScriptLinker(this.drive, {
+      builtins: gunk.builtins,
+      map: gunk.app.map,
+      mapImport: gunk.app.mapImport,
+      symbol: gunk.app.symbol,
+      protocol: gunk.app.protocol,
+      runtimes: gunk.app.runtimes
+    })
     this.connections = new Set()
     this.server = http.createServer(async (req, res) => {
       try {
@@ -76,7 +103,7 @@ module.exports = class Http extends ReadyResource {
     const name = Pear.config.name
     const { app } = await Pear.versions()
     const locals = { url: req.url, name, version: `v.${app.fork}.${app.length}.${app.key}` }
-    const stream = transform.stream(await this.ipc.get('node_modules/pear-bridge/not-found.html'), locals)
+    const stream = transform.stream(await this.ipc.read('node_modules/pear-bridge/not-found.html'), locals)
     return await streamx.pipelinePromise(stream, res)
   }
 
@@ -92,7 +119,7 @@ module.exports = class Http extends ReadyResource {
   }
 
   async #lookup (protocol, type, req, res) {
-    if (this.ipc.closed()) throw ERR_HTTP_GONE()
+    if (await this.ipc.sessionClosed()) throw ERR_HTTP_GONE()
 
     const url = `${protocol}://${type}${req.url}`
     let link = null
@@ -102,8 +129,8 @@ module.exports = class Http extends ReadyResource {
 
     let builtin = false
     if (link.filename === null) {
-      link.filename = await this.ipc.linkerResolve(link.resolve, link.dirname, { isImport })
-      builtin = link.filename === link.resolve && await this.ipc.linkerHasBuiltin(link.resolve)
+      link.filename = await this.linker.resolve(link.resolve, link.dirname, { isImport })
+      builtin = link.filename === link.resolve && this.linker.builtins.has(link.resolve)
     }
 
     let isJS = false
@@ -115,7 +142,7 @@ module.exports = class Http extends ReadyResource {
       if (ct === 'application/wasm' && link.transform === 'esm') {
         res.setHeader('Content-Type', 'application/javascript; charset=utf-8')
         link.transform = 'wasm'
-        const out = await this.ipc.linkerTransform(link)
+        const out = await this.linker.transform(link)
         res.end(out)
         return
       }
@@ -125,15 +152,15 @@ module.exports = class Http extends ReadyResource {
       isJS = ct.slice(0, 22) === 'application/javascript'
       if (builtin) {
         res.setHeader('Content-Type', 'application/javascript; charset=utf-8')
-        const out = await this.ipc.linkerTransform(link)
+        const out = await this.linker.transform(link)
         res.end(out)
         return
       }
     }
 
-    if (await this.ipc.has(link.filename) === false) {
+    if (await this.ipc.exists(link.filename) === false) {
       if (link.filename === '/index.html') {
-        const manifest = await this.ipc.get('/package.json')
+        const manifest = await this.ipc.read('/package.json')
         if (typeof manifest?.value?.main === 'string') {
           req.url = `/${manifest?.value?.main}`
           return this.#lookup(protocol, type, req, res)
@@ -152,12 +179,12 @@ module.exports = class Http extends ReadyResource {
 
     const isSourceMap = link.transform === 'map'
     if (isJS || isSourceMap) {
-      const out = await this.ipc.linkerTransform(link)
+      const out = await this.linker.transform(link)
       if (isSourceMap) res.setHeader('Content-Type', 'application/json')
       res.end(out)
     } else {
       if (protocol === 'app' && (link.filename.endsWith('.html') || link.filename.endsWith('.htm'))) {
-        const mods = await this.ipc.linkerWarmup(link.filename)
+        const mods = await this.linker.warmup(link.filename)
         const batch = []
         for (const [filename, mod] of mods) {
           if (mod.type === 'module') continue
@@ -167,7 +194,7 @@ module.exports = class Http extends ReadyResource {
         await this.ipc.warmup({ protocol, batch })
       }
 
-      const buffer = await this.ipc.get(link.filename)
+      const buffer = await this.ipc.read(link.filename)
       if (buffer === null) throw new ERR_HTTP_NOT_FOUND(`Not Found: "${link.filename}"`)
 
       res.end(buffer)
