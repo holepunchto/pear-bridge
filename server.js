@@ -207,7 +207,7 @@ module.exports = class Http extends ReadyResource {
   }
 
   info () {
-    return `{ "type": 'bridge', "data": "${'http://localhost:' + this.port}" }`
+    return `{ "type": "bridge", "data": "${'http://localhost:' + this.port}" }`
   }
 
   async _close () {
