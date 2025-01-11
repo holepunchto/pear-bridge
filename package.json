@@ -4,7 +4,8 @@
   "description": "Local HTTP Bridge for Pear Desktop Applications",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "lint": "standard --fix",
+    "test": "bare test/index.js"
   },
   "files": [
     "client.js",
@@ -35,5 +36,9 @@
     "ready-resource": "^1.1.1",
     "script-linker": "^2.5.3",
     "streamx": "^2.21.1"
+  },
+  "devDependencies": {
+    "brittle": "^3.7.0",
+    "standard": "^17.1.2"
   }
 }
