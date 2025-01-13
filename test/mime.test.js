@@ -1,7 +1,6 @@
 'use strict'
 const test = require('brittle')
 const Mime = require('../mime')
-const db = require('mime-db')
 
 // ref. https://cdn.jsdelivr.net/gh/jshttp/mime-db@master/db.json
 const mime = new Mime()
