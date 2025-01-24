@@ -11,8 +11,7 @@ const Mime = require('./mime')
 const { ERR_HTTP_BAD_REQUEST, ERR_HTTP_GONE, ERR_HTTP_NOT_FOUND } = require('./errors')
 const mime = new Mime()
 
-// TODO: read, entry, clientExists sessionClosed,reported ipc handlers in sidecar
-// and remove script-linker from sidecar
+// TODO: remove script-linker from sidecar
 
 class PearDrive {
   constructor (ipc) {
@@ -20,7 +19,7 @@ class PearDrive {
   }
 
   get (key) {
-    return this.ipc.read(key)
+    return this.ipc.get(key)
   }
 
   entry (key) {
@@ -58,17 +57,8 @@ module.exports = class Http extends ReadyResource {
 
         if (id === 'Platform') return await this.#lookup(this.sidecar, 'holepunch', type, req, res)
 
-        const [clientId, startId] = id.split('@')
+        const [, startId] = id.split('@')
 
-        if (await this.ipc.clientExists(clientId) === false) throw ERR_HTTP_BAD_REQUEST('Bad Client ID')
-
-        const minver = await this.ipc.minver()
-        if (minver !== null) {
-          res.setHeader('X-Minver', `key=${minver.key}&length=${minver.length}&fork=${minver.fork}`)
-          res.end()
-          return
-        }
-        await this.ipc.clientReady()
         if (Pear.config.startId !== startId) throw ERR_HTTP_NOT_FOUND()
         await this.lookup(startId, protocol, type, req, res)
       } catch (err) {
@@ -79,7 +69,7 @@ module.exports = class Http extends ReadyResource {
         } else if (err.code === 'SESSION_CLOSED') {
           err.status = err.status || 503
         } else {
-          global.LOG.error('internal', 'Unknown HTTP Server Error', err)
+          console.error('Unknown HTTP Server Error', err)
           err.status = 500
         }
         res.setHeader('Content-Type', 'text/plain')
@@ -103,7 +93,7 @@ module.exports = class Http extends ReadyResource {
     const name = Pear.config.name
     const { app } = await Pear.versions()
     const locals = { url: req.url, name, version: `v.${app.fork}.${app.length}.${app.key}` }
-    const stream = transform.stream(await this.ipc.read('node_modules/pear-bridge/not-found.html'), locals)
+    const stream = transform.stream(await this.ipc.get('node_modules/pear-bridge/not-found.html'), locals)
     return await streamx.pipelinePromise(stream, res)
   }
 
@@ -119,8 +109,6 @@ module.exports = class Http extends ReadyResource {
   }
 
   async #lookup (protocol, type, req, res) {
-    if (await this.ipc.sessionClosed()) throw ERR_HTTP_GONE()
-
     const url = `${protocol}://${type}${req.url}`
     let link = null
     try { link = ScriptLinker.link.parse(url) } catch { throw ERR_HTTP_BAD_REQUEST(`Bad Request (Malformed URL: ${url})`) }
@@ -160,7 +148,7 @@ module.exports = class Http extends ReadyResource {
 
     if (await this.ipc.exists(link.filename) === false) {
       if (link.filename === '/index.html') {
-        const manifest = await this.ipc.read('/package.json')
+        const manifest = await this.ipc.get('/package.json')
         if (typeof manifest?.value?.main === 'string') {
           req.url = `/${manifest?.value?.main}`
           return this.#lookup(protocol, type, req, res)
@@ -194,7 +182,7 @@ module.exports = class Http extends ReadyResource {
         await this.ipc.warmup({ protocol, batch })
       }
 
-      const buffer = await this.ipc.read(link.filename)
+      const buffer = await this.ipc.get(link.filename)
       if (buffer === null) throw new ERR_HTTP_NOT_FOUND(`Not Found: "${link.filename}"`)
 
       res.end(buffer)
@@ -204,10 +192,7 @@ module.exports = class Http extends ReadyResource {
   async _open () {
     await listen(this.server, 0, '127.0.0.1')
     this.port = this.server.address().port
-  }
-
-  info () {
-    return `{ "type": "bridge", "data": "${'http://localhost:' + this.port}" }`
+    this.addr = 'http://localhost:' + this.port
   }
 
   async _close () {
