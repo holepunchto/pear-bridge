@@ -8,10 +8,8 @@ const listen = require('listen-async')
 const gunk = require('pear-api/gunk')
 const transform = require('pear-api/transform')
 const Mime = require('./mime')
-const { ERR_HTTP_BAD_REQUEST, ERR_HTTP_GONE, ERR_HTTP_NOT_FOUND } = require('./errors')
+const { ERR_HTTP_BAD_REQUEST, ERR_HTTP_NOT_FOUND } = require('./errors')
 const mime = new Mime()
-
-// TODO: remove script-linker from sidecar
 
 class PearDrive {
   constructor (ipc) {
@@ -19,11 +17,11 @@ class PearDrive {
   }
 
   get (key) {
-    return this.ipc.get(key)
+    return this.ipc.get({ key })
   }
 
   entry (key) {
-    return this.ipc.entry(key)
+    return this.ipc.entry({ key })
   }
 }
 
@@ -57,10 +55,7 @@ module.exports = class Http extends ReadyResource {
 
         if (id === 'Platform') return await this.#lookup(this.sidecar, 'holepunch', type, req, res)
 
-        const [, startId] = id.split('@')
-
-        if (Pear.config.startId !== startId) throw ERR_HTTP_NOT_FOUND()
-        await this.lookup(startId, protocol, type, req, res)
+        await this.lookup(id, protocol, type, req, res)
       } catch (err) {
         if (err.code === 'MODULE_NOT_FOUND') {
           err.status = err.status || 404
@@ -83,8 +78,16 @@ module.exports = class Http extends ReadyResource {
       c.on('close', () => this.connections.delete(c))
     })
 
-    this.server.unref()
     this.port = null
+    this.unref()
+  }
+
+  unref () {
+    this.server.unref()
+  }
+
+  ref () {
+    this.server.ref()
   }
 
   async #notFound (req, res) {
@@ -93,12 +96,13 @@ module.exports = class Http extends ReadyResource {
     const name = Pear.config.name
     const { app } = await Pear.versions()
     const locals = { url: req.url, name, version: `v.${app.fork}.${app.length}.${app.key}` }
-    const stream = transform.stream(await this.ipc.get('node_modules/pear-bridge/not-found.html'), locals)
+    const stream = transform.stream(await this.ipc.get({ key: 'node_modules/pear-bridge/not-found.html' }), locals)
     return await streamx.pipelinePromise(stream, res)
   }
 
-  async lookup (startId, protocol, type, req, res) {
+  async lookup (id, protocol, type, req, res) {
     try {
+      const [, startId] = id.split('@')
       const reported = await this.ipc.reported({ startId })
       if (reported?.err) throw ERR_HTTP_NOT_FOUND('Not Found - ' + (reported.err.code || 'ERR_UNKNOWN') + ' - ' + reported.err.message)
       return await this.#lookup(protocol, type, req, res)
@@ -146,9 +150,9 @@ module.exports = class Http extends ReadyResource {
       }
     }
 
-    if (await this.ipc.exists(link.filename) === false) {
+    if (await this.ipc.exists({ key: link.filename }) === false) {
       if (link.filename === '/index.html') {
-        const manifest = await this.ipc.get('/package.json')
+        const manifest = await this.ipc.get({ key: '/package.json' })
         if (typeof manifest?.value?.main === 'string') {
           req.url = `/${manifest?.value?.main}`
           return this.#lookup(protocol, type, req, res)
@@ -182,7 +186,7 @@ module.exports = class Http extends ReadyResource {
         await this.ipc.warmup({ protocol, batch })
       }
 
-      const buffer = await this.ipc.get(link.filename)
+      const buffer = await this.ipc.get({ key: link.filename })
       if (buffer === null) throw new ERR_HTTP_NOT_FOUND(`Not Found: "${link.filename}"`)
 
       res.end(buffer)
