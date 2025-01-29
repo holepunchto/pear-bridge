@@ -23,6 +23,10 @@ class PearDrive {
   entry (key) {
     return this.ipc.entry({ key })
   }
+
+  compare (keyA, keyB) {
+    return this.ipc.compare({ keyA, keyB })
+  }
 }
 
 module.exports = class Http extends ReadyResource {
