@@ -1,1 +1,1 @@
-module.exports = global.Pear.constructor.UI ? require('./client') : require('./server')
+module.exports = global.Pear.constructor.UI ? require('./preload') : require('./server')

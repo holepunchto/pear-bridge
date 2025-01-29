@@ -8,7 +8,7 @@
   },
   "files": [
     "mime.js",
-    "client.js",
+    "preload.js",
     "server.js",
     "errors.js",
     "not-found.html"
