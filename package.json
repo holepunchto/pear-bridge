@@ -1,6 +1,6 @@
 {
   "name": "pear-bridge",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "description": "Local HTTP Bridge for Pear Desktop Applications",
   "main": "index.js",
   "scripts": {
