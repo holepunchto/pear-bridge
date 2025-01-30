@@ -8,8 +8,6 @@
   },
   "files": [
     "mime.js",
-    "preload.js",
-    "server.js",
     "errors.js",
     "not-found.html"
   ],
