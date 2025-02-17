@@ -49,15 +49,10 @@ module.exports = class Http extends ReadyResource {
         if (ua.slice(0, 4) !== 'Pear') throw ERR_HTTP_BAD_REQUEST()
         const [url, protocol = 'app', type = 'app'] = req.url.split('+')
         req.url = (url === '/') ? '/index.html' : url
-        if (protocol === 'platform-resolve' || protocol === 'holepunch') {
-          return await this.#lookup(this.sidecar, protocol === 'platform-resolve' ? 'resolve' : protocol, type, req, res)
-        }
         if (protocol !== 'app' && protocol !== 'resolve') {
           throw ERR_HTTP_BAD_REQUEST('Unknown protocol')
         }
         const id = ua.slice(5)
-
-        if (id === 'Platform') return await this.#lookup(this.sidecar, 'holepunch', type, req, res)
 
         await this.lookup(id, protocol, type, req, res)
       } catch (err) {
@@ -134,7 +129,6 @@ module.exports = class Http extends ReadyResource {
       const ct = mime.type(link.filename)
 
       // esm import of wasm returns the wasm file url
-
       if (ct === 'application/wasm' && link.transform === 'esm') {
         res.setHeader('Content-Type', 'application/javascript; charset=utf-8')
         link.transform = 'wasm'
@@ -155,14 +149,13 @@ module.exports = class Http extends ReadyResource {
     }
 
     if (await this.ipc.exists({ key: link.filename }) === false) {
-      if (link.filename === '/index.html') {
-        const manifest = await this.ipc.get({ key: '/package.json' })
-        if (typeof manifest?.value?.main === 'string') {
-          req.url = `/${manifest?.value?.main}`
-          return this.#lookup(protocol, type, req, res)
-        }
+      if (link.filename.endsWith('.html') === false) {
+        const file = this.#lookup(protocol, type, { __proto__: req, url: req.url + '.html'}, res)
+        const index = this.#lookup(protocol, type, { __proto__: req, url: req.url + '/index.html'}, res)
+        const matches = await Promise.allSettled([file, index])
+        if (matches[0].status === 'fulfilled') return matches[0]
+        if (matches[1].status === 'fulfilled') return matches[1]
       }
-
       throw ERR_HTTP_NOT_FOUND(`Not Found: "${link.filename}"`)
     }
 
