@@ -33,7 +33,8 @@ module.exports = class Http extends ReadyResource {
   constructor (opts = {}) {
     super()
     this.opts = opts
-    this.mount = this.opts.mount || ''
+    this.mount = this.opts.mount ?? ''
+    this.waypoint = this.opts.waypoint ?? null
     if (this.mount && this.mount[0] !== '/') this.mount = '/' + this.mount
     this.ipc = Pear[Pear.constructor.IPC]
     this.drive = new PearDrive(this.ipc)
@@ -152,12 +153,14 @@ module.exports = class Http extends ReadyResource {
     }
 
     if (await this.ipc.exists({ key: link.filename }) === false) {
-      if (link.filename.endsWith('.html') === false) {
-        const file = this.#lookup(protocol, type, { __proto__: req, url: req.url + '.html'}, res)
-        const index = this.#lookup(protocol, type, { __proto__: req, url: req.url + '/index.html'}, res)
+      if (link.filename.endsWith('.html')) {
+        if (this.waypoint) return this.#lookup(protocol, type, { __proto__: req, url: this.waypoint }, res)
+      } else {
+        const file = this.#lookup(protocol, type, { __proto__: req, url: req.url + '.html' }, res)
+        const index = this.#lookup(protocol, type, { __proto__: req, url: req.url + '/index.html' }, res)
         const matches = await Promise.allSettled([file, index])
-        if (matches[0].status === 'fulfilled') return matches[0]
-        if (matches[1].status === 'fulfilled') return matches[1]
+        if (matches[0].status === 'fulfilled' && this.waypoint !== matches[0].value) return matches[0]
+        if (matches[1].status === 'fulfilled' && this.waypoint !== matches[1].value) return matches[1]
       }
       throw ERR_HTTP_NOT_FOUND(`Not Found: "${link.filename}"`)
     }

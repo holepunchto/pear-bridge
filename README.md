@@ -37,7 +37,8 @@ Pear.teardown(() => pipe.end())
 
 #### Options
 
-* `mount` - Mount path for lookups. Given `mount = '/ui` a URL pathname of `/foo` would be fetched from `/ui/foo`. Default: `''`.
+* `mount` - Mount path for lookups. Given `mount = '/ui` a URL pathname of `/foo` would be fetched from `/ui/foo`
+* `waypoint` - Catch all HTML file for any unmatched pathnames. Use this for not found screens or in-app routing
 
 #### Methods
 
