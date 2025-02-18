@@ -12,19 +12,9 @@ npm install pear-bridge
 
 ## Usage
 
-On the UI side, load `pear-bridge` as soon as possible. For example, with `pear-electron`, 
-provide a preload file to run at the beginning of the renderer process with at least the following:
-
-
-```js
-import `pear-bridge`
-```
-
-This will setup script-linker/runtime to configure the module system to load dependencies over HTTP. 
-It will also perform warmup steps, so that the HTTP bridge is only used for dependencies in dynamic scenarios (for example: `require(expression)`). 
-
 The application entrypoint needs to instantiate the bridge and pass its info to the Pear User Interface Runtime Library.
-The following example is with `pear-electron` but any compatible Pear UI Runtime Library should work the same:
+
+The following example is with `pear-electron` but any compatible Pear UI Runtime Library should work in the same way:
 
 ```js
 import Runtime from 'pear-electron'
@@ -39,6 +29,29 @@ await server.ready()
 const pipe = runtime.start({ info: server.info() })
 Pear.teardown(() => pipe.end())
 ```
+
+
+## API
+
+### `new Bridge(opts) -> bridge`
+
+#### Options
+
+* `mount` - Mount path for lookups. Given `mount = '/ui` a URL pathname of `/foo` would be fetched from `/ui/foo`. Default: `''`.
+
+#### Methods
+
+* `ready()` - returns a promise that resolves when the server is listening
+* `close()` - closes the server
+
+#### Properties
+
+* `closed` - boolean indicating if server is closed
+* `opened` - boolean indicating if server is opened
+* `closing` - promise that resolves when server closes
+* `opening` - promise that resolves when server opens
+
+
 
 ## LICENSE
 

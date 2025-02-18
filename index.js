@@ -30,8 +30,11 @@ class PearDrive {
 }
 
 module.exports = class Http extends ReadyResource {
-  constructor () {
+  constructor (opts = {}) {
     super()
+    this.opts = opts
+    this.mount = this.opts.mount || ''
+    if (this.mount && this.mount[0] !== '/') this.mount = '/' + this.mount
     this.ipc = Pear[Pear.constructor.IPC]
     this.drive = new PearDrive(this.ipc)
     this.linker = new ScriptLinker(this.drive, {
@@ -115,7 +118,7 @@ module.exports = class Http extends ReadyResource {
     const url = `${protocol}://${type}${req.url}`
     let link = null
     try { link = ScriptLinker.link.parse(url) } catch { throw ERR_HTTP_BAD_REQUEST(`Bad Request (Malformed URL: ${url})`) }
-
+    if (link.filename !== null) link.filename = this.mount + link.filename
     const isImport = link.transform === 'esm' || link.transform === 'app'
 
     let builtin = false
