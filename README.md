@@ -52,9 +52,6 @@ Pear.teardown(() => pipe.end())
 * `closing` - promise that resolves when server closes
 * `opening` - promise that resolves when server opens
 
+## License
 
-
-## LICENSE
-
-Apachae-2.0
-
+Apache-2.0
