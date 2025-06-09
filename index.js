@@ -10,6 +10,7 @@ const transform = require('pear-api/transform')
 const Mime = require('./mime')
 const { ERR_HTTP_BAD_REQUEST, ERR_HTTP_NOT_FOUND } = require('./errors')
 const mime = new Mime()
+const IPC = Pear[Pear.constructor.IPC]
 
 class PearDrive {
   constructor (ipc) {
@@ -49,14 +50,25 @@ module.exports = class Http extends ReadyResource {
     this.connections = new Set()
     this.server = http.createServer(async (req, res) => {
       try {
-        const ua = req.headers['user-agent']
-        if (ua.slice(0, 4) !== 'Pear') throw ERR_HTTP_BAD_REQUEST()
+        const xPear = req.headers['x-pear']
+        let isDevMode = false
+        let config = null
+        if (!xPear) {
+          config = await IPC.config()
+          // Devtools send header over user-agent
+          console.log(config)
+          isDevMode = ( req.headers['user-agent']?.includes('pear-runtime')) && config.dev
+        }
+        if ((!xPear || !xPear.startsWith('Pear')) && !isDevMode) throw ERR_HTTP_BAD_REQUEST()
         const [url, protocol = 'app', type = 'app'] = req.url.split('+')
         req.url = (url === '/') ? '/index.html' : url
         if (protocol !== 'app' && protocol !== 'resolve') {
           throw ERR_HTTP_BAD_REQUEST('Unknown protocol')
         }
-        const id = ua.slice(5)
+        
+        let id = null
+        if (isDevMode) id = config.id
+        else id = xPear.slice(5)
 
         await this.lookup(id, protocol, type, req, res)
       } catch (err) {
