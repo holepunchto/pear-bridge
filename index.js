@@ -155,12 +155,14 @@ module.exports = class Http extends ReadyResource {
     if (await this.ipc.exists({ key: link.filename }) === false) {
       if (link.filename.endsWith('.html')) {
         if (this.waypoint) return this.#lookup(protocol, type, { __proto__: req, url: this.waypoint }, res)
-      } else {
+        } else {
+        const relative = this.#lookup(protocol, type, { __proto__: req, url: this.waypoint.slice(0, this.waypoint.lastIndexOf('/')) + req.url }, res)
         const file = this.#lookup(protocol, type, { __proto__: req, url: req.url + '.html' }, res)
         const index = this.#lookup(protocol, type, { __proto__: req, url: req.url + '/index.html' }, res)
-        const matches = await Promise.allSettled([file, index])
+        const matches = await Promise.allSettled([relative, file, index])
         if (matches[0].status === 'fulfilled' && this.waypoint !== matches[0].value) return matches[0]
         if (matches[1].status === 'fulfilled' && this.waypoint !== matches[1].value) return matches[1]
+        if (matches[2].status === 'fulfilled' && this.waypoint !== matches[2].value) return matches[2]
       }
       throw ERR_HTTP_NOT_FOUND(`Not Found: "${link.filename}"`)
     }
