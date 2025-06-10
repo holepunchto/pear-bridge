@@ -117,8 +117,9 @@ module.exports = class Http extends ReadyResource {
 
   async #lookup (protocol, type, req, res) {
     const url = `${protocol}://${type}${req.url}`
+    const rootUrl = `${protocol}://${type}${this.waypoint ? this.waypoint.slice(0, this.waypoint.lastIndexOf('/')) : ''}${req.url}`
     let link = null
-    try { link = ScriptLinker.link.parse(url) } catch { throw ERR_HTTP_BAD_REQUEST(`Bad Request (Malformed URL: ${url})`) }
+    try { link = ScriptLinker.link.parse(rootUrl).transform === 'app' ?  ScriptLinker.link.parse(rootUrl) : ScriptLinker.link.parse(url) } catch { throw ERR_HTTP_BAD_REQUEST(`Bad Request (Malformed URL: ${url})`) }
     if (link.filename !== null) link.filename = this.mount + link.filename
     const isImport = link.transform === 'esm' || link.transform === 'app'
 
@@ -153,16 +154,12 @@ module.exports = class Http extends ReadyResource {
     }
 
     if (await this.ipc.exists({ key: link.filename }) === false) {
-      if (link.filename.endsWith('.html')) {
-        if (this.waypoint) return this.#lookup(protocol, type, { __proto__: req, url: this.waypoint }, res)
-        } else {
-        const relative = this.#lookup(protocol, type, { __proto__: req, url: this.waypoint.slice(0, this.waypoint.lastIndexOf('/')) + req.url }, res)
+      if (!link.filename.endsWith('.html')) {
         const file = this.#lookup(protocol, type, { __proto__: req, url: req.url + '.html' }, res)
         const index = this.#lookup(protocol, type, { __proto__: req, url: req.url + '/index.html' }, res)
-        const matches = await Promise.allSettled([relative, file, index])
+        const matches = await Promise.allSettled([file, index])
         if (matches[0].status === 'fulfilled' && this.waypoint !== matches[0].value) return matches[0]
         if (matches[1].status === 'fulfilled' && this.waypoint !== matches[1].value) return matches[1]
-        if (matches[2].status === 'fulfilled' && this.waypoint !== matches[2].value) return matches[2]
       }
       throw ERR_HTTP_NOT_FOUND(`Not Found: "${link.filename}"`)
     }
