@@ -36,6 +36,7 @@ module.exports = class Http extends ReadyResource {
     this.opts = opts
     this.mount = this.opts.mount ?? ''
     this.waypoint = this.opts.waypoint ?? null
+    this._configPromise = IPC.config()
     if (this.mount && this.mount[0] !== '/') this.mount = '/' + this.mount
     this.ipc = Pear[Pear.constructor.IPC]
     this.drive = new PearDrive(this.ipc)
@@ -52,8 +53,7 @@ module.exports = class Http extends ReadyResource {
       try {
         const xPear = req.headers['x-pear']
 
-        let isDevtools = false
-        if (req.url.includes('+app+map') || /\.map$/.test(req.url)) isDevtools = true   
+        const isDevtools = req.url.includes('+app+map')
 
         if ((!xPear || !xPear.startsWith('Pear')) && !isDevtools) throw ERR_HTTP_BAD_REQUEST()
         const [url, protocol = 'app', type = 'app'] = req.url.split('+')
@@ -61,13 +61,8 @@ module.exports = class Http extends ReadyResource {
         if (protocol !== 'app' && protocol !== 'resolve') {
           throw ERR_HTTP_BAD_REQUEST('Unknown protocol')
         }
-
-        let id = null
-        if (isDevtools) {
-          const config = await IPC.config()
-          id = config.id
-        }
-        else id = xPear.slice(5)
+        const config = await this._configPromise
+        const id = isDevtools ? config.id : xPear.slice(5)
 
         await this.lookup(id, protocol, type, req, res)
       } catch (err) {
