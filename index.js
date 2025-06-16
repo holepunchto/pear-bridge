@@ -51,23 +51,22 @@ module.exports = class Http extends ReadyResource {
     this.server = http.createServer(async (req, res) => {
       try {
         const xPear = req.headers['x-pear']
-        let isDevMode = false
-        let config = null
-        if (!xPear) {
-          config = await IPC.config()
-          // Devtools send header over user-agent
-          console.log(config)
-          isDevMode = ( req.headers['user-agent']?.includes('pear-runtime')) && config.dev
-        }
-        if ((!xPear || !xPear.startsWith('Pear')) && !isDevMode) throw ERR_HTTP_BAD_REQUEST()
+
+        let isDevtools = false
+        if (req.url.includes('+app+map') || /\.map$/.test(req.url)) isDevtools = true   
+
+        if ((!xPear || !xPear.startsWith('Pear')) && !isDevtools) throw ERR_HTTP_BAD_REQUEST()
         const [url, protocol = 'app', type = 'app'] = req.url.split('+')
         req.url = (url === '/') ? '/index.html' : url
         if (protocol !== 'app' && protocol !== 'resolve') {
           throw ERR_HTTP_BAD_REQUEST('Unknown protocol')
         }
-        
+
         let id = null
-        if (isDevMode) id = config.id
+        if (isDevtools) {
+          const config = await IPC.config()
+          id = config.id
+        }
         else id = xPear.slice(5)
 
         await this.lookup(id, protocol, type, req, res)
