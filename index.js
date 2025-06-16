@@ -10,7 +10,6 @@ const transform = require('pear-api/transform')
 const Mime = require('./mime')
 const { ERR_HTTP_BAD_REQUEST, ERR_HTTP_NOT_FOUND } = require('./errors')
 const mime = new Mime()
-const IPC = Pear[Pear.constructor.IPC]
 
 class PearDrive {
   constructor (ipc) {
@@ -36,7 +35,6 @@ module.exports = class Http extends ReadyResource {
     this.opts = opts
     this.mount = this.opts.mount ?? ''
     this.waypoint = this.opts.waypoint ?? null
-    this._configPromise = IPC.config()
     if (this.mount && this.mount[0] !== '/') this.mount = '/' + this.mount
     this.ipc = Pear[Pear.constructor.IPC]
     this.drive = new PearDrive(this.ipc)
@@ -61,8 +59,7 @@ module.exports = class Http extends ReadyResource {
         if (protocol !== 'app' && protocol !== 'resolve') {
           throw ERR_HTTP_BAD_REQUEST('Unknown protocol')
         }
-        const config = await this._configPromise
-        const id = isDevtools ? config.id : xPear.slice(5)
+        const id = isDevtools ? Pear.config.id : xPear.slice(5)
 
         await this.lookup(id, protocol, type, req, res)
       } catch (err) {
