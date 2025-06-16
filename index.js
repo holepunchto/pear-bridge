@@ -49,14 +49,17 @@ module.exports = class Http extends ReadyResource {
     this.connections = new Set()
     this.server = http.createServer(async (req, res) => {
       try {
-        const ua = req.headers['user-agent']
-        if (ua.slice(0, 4) !== 'Pear') throw ERR_HTTP_BAD_REQUEST()
+        const xPear = req.headers['x-pear']
+
+        const isDevtools = req.url.includes('+app+map')
+
+        if ((!xPear || !xPear.startsWith('Pear')) && !isDevtools) throw ERR_HTTP_BAD_REQUEST()
         const [url, protocol = 'app', type = 'app'] = req.url.split('+')
         req.url = (url === '/') ? '/index.html' : url
         if (protocol !== 'app' && protocol !== 'resolve') {
           throw ERR_HTTP_BAD_REQUEST('Unknown protocol')
         }
-        const id = ua.slice(5)
+        const id = isDevtools ? Pear.config.id : xPear.slice(5)
 
         await this.lookup(id, protocol, type, req, res)
       } catch (err) {
