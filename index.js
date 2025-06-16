@@ -118,8 +118,8 @@ module.exports = class Http extends ReadyResource {
   async #lookup (protocol, type, req, res) {
     const url = `${protocol}://${type}${req.url}`
     const rootUrl = `${protocol}://${type}${this.waypoint ? this.waypoint.slice(0, this.waypoint.lastIndexOf('/')) : ''}${req.url}`
-    let link = null
-    try { link = ScriptLinker.link.parse(rootUrl).transform === 'app' ?  ScriptLinker.link.parse(rootUrl) : ScriptLinker.link.parse(url) } catch { throw ERR_HTTP_BAD_REQUEST(`Bad Request (Malformed URL: ${url})`) }
+    let link = ScriptLinker.link.parse(rootUrl)
+    try { link = link.transform === 'app' ? link : ScriptLinker.link.parse(url) } catch { throw ERR_HTTP_BAD_REQUEST(`Bad Request (Malformed URL: ${url})`) }
     if (link.filename !== null) link.filename = this.mount + link.filename
     const isImport = link.transform === 'esm' || link.transform === 'app'
 
