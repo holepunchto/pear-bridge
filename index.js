@@ -35,6 +35,7 @@ module.exports = class Http extends ReadyResource {
     this.opts = opts
     this.mount = this.opts.mount ?? ''
     this.waypoint = this.opts.waypoint ?? null
+    if (this.waypoint && this.waypoint[0] !== '/') this.waypoint = '/' + this.waypoint
     if (this.mount && this.mount[0] !== '/') this.mount = '/' + this.mount
     this.ipc = Pear[Pear.constructor.IPC]
     this.drive = new PearDrive(this.ipc)
@@ -157,7 +158,9 @@ module.exports = class Http extends ReadyResource {
 
     if (await this.ipc.exists({ key: link.filename }) === false) {
       if (link.filename.endsWith('.html')) {
-        if (this.waypoint) return this.#lookup(protocol, type, { __proto__: req, url: this.waypoint }, res)
+        if (this.waypoint) {
+          return this.#lookup(protocol, type, { __proto__: req, url: this.waypoint }, res)
+        }
       } else {
         const file = this.#lookup(protocol, type, { __proto__: req, url: req.url + '.html' }, res)
         const index = this.#lookup(protocol, type, { __proto__: req, url: req.url + '/index.html' }, res)
