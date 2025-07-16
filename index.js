@@ -7,6 +7,7 @@ const streamx = require('streamx')
 const listen = require('listen-async')
 const gunk = require('pear-api/gunk')
 const transform = require('pear-api/transform')
+const z32 = require('z32')
 const Mime = require('./mime')
 const { ERR_HTTP_BAD_REQUEST, ERR_HTTP_NOT_FOUND } = require('./errors')
 const mime = new Mime()
@@ -50,8 +51,9 @@ module.exports = class Http extends ReadyResource {
     this.connections = new Set()
     this.server = http.createServer(async (req, res) => {
       try {
-        const xPear = req.headers['x-pear']
+        req.url = Http.isKeetInvite(req.url) ? '/' : req.url
 
+        const xPear = req.headers['x-pear']
         const isDevtools = req.url.includes('+app+map')
 
         if ((!xPear || !xPear.startsWith('Pear')) && !isDevtools) throw ERR_HTTP_BAD_REQUEST()
@@ -87,6 +89,13 @@ module.exports = class Http extends ReadyResource {
 
     this.port = null
     this.unref()
+  }
+
+  static isKeetInvite (segment) {
+    if (typeof segment === 'string' && segment.startsWith('/')) segment = segment.slice(1)
+    if (!segment || segment.length < 100) return false
+    try { z32.decode(segment) } catch { return false }
+    return true
   }
 
   unref () {
