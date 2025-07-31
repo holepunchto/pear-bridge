@@ -33,6 +33,7 @@ module.exports = class Http extends ReadyResource {
   constructor (opts = {}) {
     super()
     this.opts = opts
+    this.bypass = this.opts.bypass ?? ['/node_modules']
     this.mount = this.opts.mount ?? ''
     this.waypoint = this.opts.waypoint ?? null
     if (this.waypoint && this.waypoint[0] !== '/') this.waypoint = '/' + this.waypoint
@@ -130,6 +131,12 @@ module.exports = class Http extends ReadyResource {
     if (link.filename === null) {
       link.filename = await this.linker.resolve(link.resolve, link.dirname, { isImport })
       builtin = link.filename === link.resolve && this.linker.builtins.has(link.resolve)
+    }
+
+    for (const bypass of this.bypass) {
+      if (link.filename.startsWith(this.mount + bypass + '/')) {
+        link.filename = link.filename.slice(this.mount.length)
+      }
     }
 
     let isJS = false

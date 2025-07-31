@@ -37,8 +37,9 @@ Pear.teardown(() => pipe.end())
 
 #### Options
 
-* `mount` - Mount path for lookups. Given `mount = '/ui` a URL pathname of `/foo` would be fetched from `/ui/foo`
-* `waypoint` - Catch all HTML file for any unmatched pathnames. Use this for not found screens or in-app routing
+* `mount` - String. Mount path for lookups. Given `mount = '/ui` a URL pathname of `/foo` would be fetched from `/ui/foo`.
+* `waypoint` - String. Catch all HTML file for any unmatched pathnames. Use this for not found screens or in-app routing. Specify relative to `mount`.
+* `bypass` - Array. Default ['/node_modules']. Advanced. Mount bypass, allows dependency discovery from application root.
 
 #### Methods
 
