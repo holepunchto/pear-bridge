@@ -5,6 +5,7 @@
   "main": "index.js",
   "scripts": {
     "test": "brittle-bare test/index.mjs",
+    "coverage": "brittle-bare --coverage test/index.mjs",
     "lint": "standard"
   },
   "files": [

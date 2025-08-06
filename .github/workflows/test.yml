@@ -1,4 +1,4 @@
-name: Test
+name: Test with coverage
 
 on:
   push:
@@ -41,4 +41,4 @@ jobs:
         run: npm run lint
 
       - name: Run tests
-        run: npm test
+        run: npm run coverage
