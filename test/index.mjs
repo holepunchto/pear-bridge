@@ -8,7 +8,7 @@ const noop = () => {}
 
 const entries = new Map()
 const files = new Map()
-files.find = ({ seq }) => {
+const findFile = ({ seq }) => {
   for (const [k, v] of files.entries()) { if (k.seq === seq) return v }
   return null
 }
@@ -21,7 +21,7 @@ hook('setup rig', async function (t) {
       reported: noop,
       warmup: noop,
       exists: async (data) => files.has(data.key),
-      get: async (data) => (typeof data.key === 'string' ? files.get(data.key) : files.find(data.key)) || null,
+      get: async (data) => (typeof data.key === 'string' ? files.get(data.key) : findFile(data.key)) || null,
       versions: async () => ({ app: { fork: 0, length: 100, key: 'key' } }),
       entry: async (data) => entries.get(data.key) || null
     },
