@@ -29,7 +29,7 @@ hook('setup rig', async function (t) {
   })
   const ipc = await Helper.startIpcClient()
 
-  teardowns.push(await Helper.rig({ ipc, state: { config: { name: 'pear-bridge' } } }))
+  teardowns.push(await Helper.rig({ ipc, state: { config: { id: '0@a', name: 'pear-bridge' } } }))
 })
 
 test('should get existing file', async function (t) {
@@ -103,12 +103,15 @@ test('should handle devtools requests (+app+map)', async function (t) {
   await bridge.ready()
   t.teardown(() => bridge.close())
 
-  files.set('/index.js', 'console.log("hello")')
+  files.set('/index.js', 'console.log("test")')
+  const fileNode = { seq: 1, key: '/index.js', value: { metadata: { type: 'commonjs', resolutions: [] } } }
+  files.set(fileNode, 'console.log("test")')
+  entries.set('/index.js', fileNode)
   t.teardown(() => { files.clear() })
 
   const response = await fetch(`http://${bridge.host ?? '127.0.0.1'}:${bridge.port}/index.js+app+map`)
 
-  t.ok(response.status >= 200 && response.status < 600, 'devtools request should return a valid HTTP status')
+  t.is(response.status, 200, 'devtools request should return 200')
 })
 
 test('should handle unknown protocol', async function (t) {
