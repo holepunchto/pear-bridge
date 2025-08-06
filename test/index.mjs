@@ -79,8 +79,6 @@ test('should handle missing x-pear header', async function (t) {
 
   const response = await fetch(`http://${bridge.host ?? '127.0.0.1'}:${bridge.port}/index.html`)
 
-  console.log('response status', response.status)
-
   t.is(response.status, 400, 'should return status 400 for missing x-pear header')
   t.ok(response.headers.get('content-type').includes('text/plain'), 'should have plain text content type for errors')
 })
