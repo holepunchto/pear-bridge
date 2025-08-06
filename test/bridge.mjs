@@ -227,6 +227,7 @@ test('should handle resolve protocol', async function (t) {
 
   t.is(response.status, 200, 'should return status 200')
   t.ok(response.headers.get('content-type').includes('text/plain'), 'should have plain text content type')
+  t.is(await response.text(), '/test.js', 'should return file path for resolve protocol')
 })
 
 test('should handle binary files', async function (t) {
@@ -242,6 +243,7 @@ test('should handle binary files', async function (t) {
 
   t.is(response.status, 200, 'should return status 200')
   t.ok(response.headers.get('content-type').includes('image/png'), 'should have correct content type for PNG')
+  t.is(await response.text(), binaryData.toString(), 'should return correct binary data')
 })
 
 test('should handle files with no extension', async function (t) {
@@ -256,6 +258,7 @@ test('should handle files with no extension', async function (t) {
 
   t.is(response.status, 200, 'should return status 200')
   t.ok(response.headers.get('content-type').includes('application/octet-stream'), 'should default to octet-stream')
+  t.is(await response.text(), 'MIT License content', 'should return correct content')
 })
 
 test('should handle JSON files with correct content type', async function (t) {
@@ -271,6 +274,7 @@ test('should handle JSON files with correct content type', async function (t) {
   t.is(response.status, 200, 'should return status 200')
   t.ok(response.headers.get('content-type').includes('application/json'), 'should have correct content type for JSON')
   t.ok(response.headers.get('content-type').includes('charset=utf-8'), 'should include UTF-8 charset')
+  t.is(await response.text(), '{"test": "value"}', 'should return correct JSON content')
 })
 
 test('should use mount option for file lookups', async function (t) {
