@@ -173,6 +173,22 @@ test('should serve CSS files with correct content type', async function (t) {
   t.ok(response.headers.get('content-type').includes('text/css'), 'should have correct content type')
 })
 
+test('should serve JSON files with correct content type', async function (t) {
+  const bridge = new Bridge({ ipc: Helper.socketPath })
+  await bridge.ready()
+  t.teardown(() => bridge.close())
+
+  files.set('/data.json', '{"test": "value"}')
+  t.teardown(() => { files.clear() })
+
+  const response = await fetch(`http://${bridge.host ?? '127.0.0.1'}:${bridge.port}/data.json`, { headers })
+
+  t.is(response.status, 200, 'should return status 200')
+  t.ok(response.headers.get('content-type').includes('application/json'), 'should have correct content type for JSON')
+  t.ok(response.headers.get('content-type').includes('charset=utf-8'), 'should include UTF-8 charset')
+  t.is(await response.text(), '{"test": "value"}', 'should return correct JSON content')
+})
+
 test('should handle root path redirect to index.html', async function (t) {
   const bridge = new Bridge({ ipc: Helper.socketPath })
   await bridge.ready()
@@ -259,22 +275,6 @@ test('should handle files with no extension', async function (t) {
   t.is(response.status, 200, 'should return status 200')
   t.ok(response.headers.get('content-type').includes('application/octet-stream'), 'should default to octet-stream')
   t.is(await response.text(), 'MIT License content', 'should return correct content')
-})
-
-test('should handle JSON files with correct content type', async function (t) {
-  const bridge = new Bridge({ ipc: Helper.socketPath })
-  await bridge.ready()
-  t.teardown(() => bridge.close())
-
-  files.set('/data.json', '{"test": "value"}')
-  t.teardown(() => { files.clear() })
-
-  const response = await fetch(`http://${bridge.host ?? '127.0.0.1'}:${bridge.port}/data.json`, { headers })
-
-  t.is(response.status, 200, 'should return status 200')
-  t.ok(response.headers.get('content-type').includes('application/json'), 'should have correct content type for JSON')
-  t.ok(response.headers.get('content-type').includes('charset=utf-8'), 'should include UTF-8 charset')
-  t.is(await response.text(), '{"test": "value"}', 'should return correct JSON content')
 })
 
 test('should use mount option for file lookups', async function (t) {
