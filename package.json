@@ -4,7 +4,7 @@
   "description": "Local HTTP Bridge for Pear Desktop Applications",
   "main": "index.js",
   "scripts": {
-    "test": "brittle-bare test/all.mjs",
+    "test": "brittle-bare test/index.mjs",
     "lint": "standard"
   },
   "files": [
