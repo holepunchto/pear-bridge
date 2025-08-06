@@ -157,6 +157,7 @@ test('should serve HTML files with correct content type', async function (t) {
 
   t.is(response.status, 200, 'should return status 200')
   t.ok(response.headers.get('content-type').includes('text/html'), 'should have correct content type')
+  t.is(await response.text(), '<html><body>test</body></html>', 'should return correct HTML content')
 })
 
 test('should serve CSS files with correct content type', async function (t) {
@@ -171,6 +172,7 @@ test('should serve CSS files with correct content type', async function (t) {
 
   t.is(response.status, 200, 'should return status 200')
   t.ok(response.headers.get('content-type').includes('text/css'), 'should have correct content type')
+  t.is(await response.text(), 'body { color: red; }', 'should return correct CSS content')
 })
 
 test('should serve JSON files with correct content type', async function (t) {
