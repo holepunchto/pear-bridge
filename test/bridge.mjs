@@ -273,6 +273,76 @@ test('should handle JSON files with correct content type', async function (t) {
   t.ok(response.headers.get('content-type').includes('charset=utf-8'), 'should include UTF-8 charset')
 })
 
+test('should use mount option for file lookups', async function (t) {
+  const bridge = new Bridge({
+    ipc: Helper.socketPath,
+    mount: '/ui'
+  })
+  await bridge.ready()
+  t.teardown(() => bridge.close())
+
+  files.set('/ui/index.html', 'mounted content')
+  t.teardown(() => { files.clear() })
+
+  const response = await fetch(`http://${bridge.host ?? '127.0.0.1'}:${bridge.port}/index.html`, { headers })
+
+  t.is(response.status, 200, 'should find file with under mount prefix')
+  t.is(await response.text(), 'mounted content', 'should return correct content')
+})
+
+test('should use bypass option to skip mount for certain paths', async function (t) {
+  const bridge = new Bridge({
+    ipc: Helper.socketPath,
+    mount: '/ui',
+    bypass: ['/node_modules']
+  })
+  await bridge.ready()
+  t.teardown(() => bridge.close())
+
+  files.set('/node_modules/package.json', '{"name": "test-package"}')
+  t.teardown(() => { files.clear() })
+
+  const response = await fetch(`http://${bridge.host ?? '127.0.0.1'}:${bridge.port}/node_modules/package.json`, { headers })
+
+  t.is(response.status, 200, 'should find file bypassing mount prefix')
+  t.is(await response.text(), '{"name": "test-package"}', 'should return content from bypassed location')
+})
+
+test('should use waypoint for unmatched HTML requests', async function (t) {
+  const bridge = new Bridge({
+    ipc: Helper.socketPath,
+    waypoint: '/fallback.html'
+  })
+  await bridge.ready()
+  t.teardown(() => bridge.close())
+
+  files.set('/fallback.html', '<html><body>Not Found Page</body></html>')
+  t.teardown(() => { files.clear() })
+
+  const response = await fetch(`http://${bridge.host ?? '127.0.0.1'}:${bridge.port}/nonexistent.html`, { headers })
+
+  t.is(response.status, 200, 'should return waypoint for missing HTML files')
+  t.is(await response.text(), '<html><body>Not Found Page</body></html>', 'should return waypoint content')
+})
+
+test('should combine mount and waypoint options', async function (t) {
+  const bridge = new Bridge({
+    ipc: Helper.socketPath,
+    mount: '/app',
+    waypoint: '/index.html'
+  })
+  await bridge.ready()
+  t.teardown(() => bridge.close())
+
+  files.set('/app/index.html', '<html><body>App SPA</body></html>')
+  t.teardown(() => { files.clear() })
+
+  const response = await fetch(`http://${bridge.host ?? '127.0.0.1'}:${bridge.port}/some/route.html`, { headers })
+
+  t.is(response.status, 200, 'should return waypoint for missing HTML files with mount')
+  t.is(await response.text(), '<html><body>App SPA</body></html>', 'should return waypoint content from mounted location')
+})
+
 test('should handle large file requests', async function (t) {
   const bridge = new Bridge({ ipc: Helper.socketPath })
   await bridge.ready()
