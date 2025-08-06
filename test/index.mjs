@@ -33,7 +33,7 @@ hook('setup rig', async function (t) {
 })
 
 test('should get existing file', async function (t) {
-  const bridge = new Bridge({ ipc: Helper.socketPath })
+  const bridge = new Bridge()
   await bridge.ready()
   t.teardown(() => bridge.close())
 
@@ -47,7 +47,7 @@ test('should get existing file', async function (t) {
 })
 
 test('should return 404 with missing file', async function (t) {
-  const bridge = new Bridge({ ipc: Helper.socketPath })
+  const bridge = new Bridge()
   await bridge.ready()
   t.teardown(() => bridge.close())
 
@@ -59,7 +59,7 @@ test('should return 404 with missing file', async function (t) {
 })
 
 test('should return 404 with missing file and not-found fallback', async function (t) {
-  const bridge = new Bridge({ ipc: Helper.socketPath })
+  const bridge = new Bridge()
   await bridge.ready()
   t.teardown(() => bridge.close())
 
@@ -73,7 +73,7 @@ test('should return 404 with missing file and not-found fallback', async functio
 })
 
 test('should handle missing x-pear header', async function (t) {
-  const bridge = new Bridge({ ipc: Helper.socketPath })
+  const bridge = new Bridge()
   await bridge.ready()
   t.teardown(() => bridge.close())
 
@@ -86,7 +86,7 @@ test('should handle missing x-pear header', async function (t) {
 })
 
 test('should handle invalid x-pear header', async function (t) {
-  const bridge = new Bridge({ ipc: Helper.socketPath })
+  const bridge = new Bridge()
   await bridge.ready()
   t.teardown(() => bridge.close())
 
@@ -99,7 +99,7 @@ test('should handle invalid x-pear header', async function (t) {
 })
 
 test('should handle devtools requests (+app+map)', async function (t) {
-  const bridge = new Bridge({ ipc: Helper.socketPath })
+  const bridge = new Bridge()
   await bridge.ready()
   t.teardown(() => bridge.close())
 
@@ -115,7 +115,7 @@ test('should handle devtools requests (+app+map)', async function (t) {
 })
 
 test('should handle unknown protocol', async function (t) {
-  const bridge = new Bridge({ ipc: Helper.socketPath })
+  const bridge = new Bridge()
   await bridge.ready()
   t.teardown(() => bridge.close())
 
@@ -126,7 +126,7 @@ test('should handle unknown protocol', async function (t) {
 })
 
 test('should serve javascript files with correct content type', async function (t) {
-  const bridge = new Bridge({ ipc: Helper.socketPath })
+  const bridge = new Bridge()
   await bridge.ready()
   t.teardown(() => bridge.close())
 
@@ -146,7 +146,7 @@ test('should serve javascript files with correct content type', async function (
 })
 
 test('should serve HTML files with correct content type', async function (t) {
-  const bridge = new Bridge({ ipc: Helper.socketPath })
+  const bridge = new Bridge()
   await bridge.ready()
   t.teardown(() => bridge.close())
 
@@ -161,7 +161,7 @@ test('should serve HTML files with correct content type', async function (t) {
 })
 
 test('should serve CSS files with correct content type', async function (t) {
-  const bridge = new Bridge({ ipc: Helper.socketPath })
+  const bridge = new Bridge()
   await bridge.ready()
   t.teardown(() => bridge.close())
 
@@ -176,7 +176,7 @@ test('should serve CSS files with correct content type', async function (t) {
 })
 
 test('should serve JSON files with correct content type', async function (t) {
-  const bridge = new Bridge({ ipc: Helper.socketPath })
+  const bridge = new Bridge()
   await bridge.ready()
   t.teardown(() => bridge.close())
 
@@ -192,7 +192,7 @@ test('should serve JSON files with correct content type', async function (t) {
 })
 
 test('should handle root path redirect to index.html', async function (t) {
-  const bridge = new Bridge({ ipc: Helper.socketPath })
+  const bridge = new Bridge()
   await bridge.ready()
   t.teardown(() => bridge.close())
 
@@ -206,7 +206,7 @@ test('should handle root path redirect to index.html', async function (t) {
 })
 
 test('should handle file extension fallback (.html)', async function (t) {
-  const bridge = new Bridge({ ipc: Helper.socketPath })
+  const bridge = new Bridge()
   await bridge.ready()
   t.teardown(() => bridge.close())
 
@@ -220,7 +220,7 @@ test('should handle file extension fallback (.html)', async function (t) {
 })
 
 test('should handle index.html fallback for directories', async function (t) {
-  const bridge = new Bridge({ ipc: Helper.socketPath })
+  const bridge = new Bridge()
   await bridge.ready()
   t.teardown(() => bridge.close())
 
@@ -234,7 +234,7 @@ test('should handle index.html fallback for directories', async function (t) {
 })
 
 test('should handle resolve protocol', async function (t) {
-  const bridge = new Bridge({ ipc: Helper.socketPath })
+  const bridge = new Bridge()
   await bridge.ready()
   t.teardown(() => bridge.close())
 
@@ -249,7 +249,7 @@ test('should handle resolve protocol', async function (t) {
 })
 
 test('should handle binary files', async function (t) {
-  const bridge = new Bridge({ ipc: Helper.socketPath })
+  const bridge = new Bridge()
   await bridge.ready()
   t.teardown(() => bridge.close())
 
@@ -265,7 +265,7 @@ test('should handle binary files', async function (t) {
 })
 
 test('should handle files with no extension', async function (t) {
-  const bridge = new Bridge({ ipc: Helper.socketPath })
+  const bridge = new Bridge()
   await bridge.ready()
   t.teardown(() => bridge.close())
 
@@ -350,7 +350,7 @@ test('should combine mount and waypoint options', async function (t) {
 })
 
 test('should handle large file requests', async function (t) {
-  const bridge = new Bridge({ ipc: Helper.socketPath })
+  const bridge = new Bridge()
   await bridge.ready()
   t.teardown(() => bridge.close())
 
@@ -365,7 +365,7 @@ test('should handle large file requests', async function (t) {
 })
 
 test('should handle concurrent requests', async function (t) {
-  const bridge = new Bridge({ ipc: Helper.socketPath })
+  const bridge = new Bridge()
   await bridge.ready()
   t.teardown(() => bridge.close())
 
@@ -392,7 +392,7 @@ test('should handle concurrent requests', async function (t) {
 })
 
 test('should handle malformed URLs gracefully', async function (t) {
-  const bridge = new Bridge({ ipc: Helper.socketPath })
+  const bridge = new Bridge()
   await bridge.ready()
   t.teardown(() => bridge.close())
 
