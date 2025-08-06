@@ -131,7 +131,7 @@ test('should serve javascript files with correct content type', async function (
   t.teardown(() => bridge.close())
 
   files.set('/script.js', 'console.log("test")')
-  const fileNode = { seq: 1, key: '/index.js', value: { metadata: { type: 'commonjs', resolutions: [] } } }
+  const fileNode = { seq: 1, key: '/script.js', value: { metadata: { type: 'commonjs', resolutions: [] } } }
   files.set(fileNode, 'console.log("test")')
   entries.set('/script.js', fileNode)
   t.teardown(() => { files.clear() })
