@@ -65,7 +65,9 @@ module.exports = class Http extends ReadyResource {
 
         await this.lookup(id, protocol, type, req, res)
       } catch (err) {
-        if (err.code === 'MODULE_NOT_FOUND') {
+        if (err.code === 'ERR_HTTP_BAD_REQUEST') {
+          err.status = err.status || 400
+        } else if (err.code === 'MODULE_NOT_FOUND') {
           err.status = err.status || 404
         } else if (err.code === 'ERR_HTTP_NOT_FOUND') {
           err.status = err.status || 404
