@@ -1,7 +1,7 @@
 'use strict'
 const getMimeType = require('get-mime-type')
 
-module.exports = function getType (filepath) {
+module.exports = function mime (filepath) {
   let contentType = getMimeType(filepath.split('.').pop() || 'js')
 
   if (!contentType) return 'application/octet-stream'

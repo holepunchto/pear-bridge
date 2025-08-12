@@ -8,7 +8,7 @@ const listen = require('listen-async')
 const gunk = require('pear-api/gunk')
 const transform = require('pear-api/transform')
 const AppDrive = require('pear-appdrive')
-const getMimeType = require('./mime')
+const mime = require('./mime')
 const { ERR_HTTP_BAD_REQUEST, ERR_HTTP_NOT_FOUND } = require('./errors')
 
 module.exports = class Http extends ReadyResource {
@@ -125,7 +125,7 @@ module.exports = class Http extends ReadyResource {
 
     let isJS = false
     if (protocol !== 'resolve') {
-      const ct = getMimeType(link.filename)
+      const ct = mime(link.filename)
 
       // esm import of wasm returns the wasm file url
       if (ct === 'application/wasm' && link.transform === 'esm') {
