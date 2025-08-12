@@ -7,27 +7,10 @@ const streamx = require('streamx')
 const listen = require('listen-async')
 const gunk = require('pear-api/gunk')
 const transform = require('pear-api/transform')
+const AppDrive = require('pear-appdrive')
 const Mime = require('./mime')
 const { ERR_HTTP_BAD_REQUEST, ERR_HTTP_NOT_FOUND } = require('./errors')
 const mime = new Mime()
-
-class PearDrive {
-  constructor (ipc) {
-    this.ipc = ipc
-  }
-
-  get (key) {
-    return this.ipc.get({ key })
-  }
-
-  entry (key) {
-    return this.ipc.entry({ key })
-  }
-
-  compare (keyA, keyB) {
-    return this.ipc.compare({ keyA, keyB })
-  }
-}
 
 module.exports = class Http extends ReadyResource {
   constructor (opts = {}) {
@@ -39,7 +22,7 @@ module.exports = class Http extends ReadyResource {
     if (this.waypoint && this.waypoint[0] !== '/') this.waypoint = '/' + this.waypoint
     if (this.mount && this.mount[0] !== '/') this.mount = '/' + this.mount
     this.ipc = Pear[Pear.constructor.IPC]
-    this.drive = new PearDrive(this.ipc)
+    this.drive = new AppDrive()
     this.linker = new ScriptLinker(this.drive, {
       builtins: gunk.builtins,
       map: gunk.app.map,
