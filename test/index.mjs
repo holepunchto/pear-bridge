@@ -185,7 +185,7 @@ test('should serve JSON files with correct content type', async function (t) {
 
   t.is(response.status, 200, 'should return status 200')
   t.ok(response.headers.get('content-type').includes('application/json'), 'should have correct content type for JSON')
-  t.ok(response.headers.get('content-type').includes('charset=utf-8'), 'should include UTF-8 charset')
+  t.ok(response.headers.get('content-type').toLowerCase().includes('charset=utf-8'), 'should include UTF-8 charset')
   t.is(await response.text(), '{"test": "value"}', 'should return correct JSON content')
 })
 
