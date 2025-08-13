@@ -8,7 +8,7 @@ const listen = require('listen-async')
 const gunk = require('pear-api/gunk')
 const transform = require('pear-api/transform')
 const AppDrive = require('pear-appdrive')
-const mime = require('./mime')
+const mime = require('get-mime-type')
 const { ERR_HTTP_BAD_REQUEST, ERR_HTTP_NOT_FOUND } = require('./errors')
 
 module.exports = class Http extends ReadyResource {
