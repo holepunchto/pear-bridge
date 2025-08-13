@@ -30,8 +30,8 @@
   },
   "dependencies": {
     "bare-http1": "^4.0.2",
+    "get-mime-type": "^2.0.0",
     "listen-async": "^1.0.0",
-    "mime-db": "^1.53.0",
     "pear-api": "*",
     "pear-appdrive": "^1.0.0",
     "ready-resource": "^1.1.1",
