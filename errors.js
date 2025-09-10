@@ -1,6 +1,6 @@
 'use strict'
 
-class PearError extends require('pear-api/errors') {
+class PearError extends require('pear-errors') {
   static ERR_HTTP_GONE = ERR_HTTP_GONE
   static ERR_HTTP_BAD_REQUEST = ERR_HTTP_BAD_REQUEST
   static ERR_HTTP_NOT_FOUND = ERR_HTTP_NOT_FOUND

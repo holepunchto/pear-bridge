@@ -5,8 +5,8 @@ const ScriptLinker = require('script-linker')
 const ReadyResource = require('ready-resource')
 const streamx = require('streamx')
 const listen = require('listen-async')
-const gunk = require('pear-api/gunk')
-const transform = require('pear-api/transform')
+const gunk = require('pear-gunk')
+const stamp = require('pear-stamp')
 const AppDrive = require('pear-appdrive')
 const mime = require('get-mime-type')
 const { ERR_HTTP_BAD_REQUEST, ERR_HTTP_NOT_FOUND } = require('./errors')
@@ -88,7 +88,7 @@ module.exports = class Http extends ReadyResource {
     const name = Pear.config.name
     const { app } = await Pear.versions()
     const locals = { url: req.url, name, version: `v.${app.fork}.${app.length}.${app.key}` }
-    const stream = transform.stream(await this.ipc.get({ key: 'node_modules/pear-bridge/not-found.html' }), locals)
+    const stream = stamp.stream(await this.ipc.get({ key: 'node_modules/pear-bridge/not-found.html' }), locals)
     return await streamx.pipelinePromise(stream, res)
   }
 

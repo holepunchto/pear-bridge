@@ -25,8 +25,7 @@ export default class Helper {
   static async rig ({
     ipc = { ref: noop, unref: noop },
     state = {},
-    runtimeArgv,
-    clearRequireCache
+    runtimeArgv
   } = {}) {
     if (global.Pear) {
       console.error(global.Pear)
