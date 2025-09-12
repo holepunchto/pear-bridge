@@ -194,6 +194,7 @@ module.exports = class Http extends ReadyResource {
   }
 
   async _open () {
+    await this.drive.ready()
     await listen(this.server, 0, '127.0.0.1')
     this.port = this.server.address().port
     this.addr = 'http://localhost:' + this.port
@@ -203,5 +204,6 @@ module.exports = class Http extends ReadyResource {
     const serverClosing = new Promise((resolve) => this.server.close(resolve))
     for (const c of this.connections) c.destroy()
     await serverClosing
+    await this.drive.close()
   }
 }
