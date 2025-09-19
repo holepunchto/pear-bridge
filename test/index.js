@@ -1,8 +1,7 @@
-import fetch from 'bare-fetch'
-import { test, hook } from 'brittle'
-
-import Bridge from '../index.js'
-import Helper from './helper/index.mjs'
+const Helper = require('./helper') // must be first
+const fetch = require('bare-fetch')
+const { test, hook } = require('brittle')
+const Bridge = require('..')
 
 const noop = () => {}
 

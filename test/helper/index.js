@@ -1,12 +1,15 @@
-import { isWindows } from 'which-runtime'
-import IPC from 'pear-ipc'
-import path from 'path'
+const { isWindows } = require('which-runtime')
+const IPC = require('pear-ipc')
+const path = require('path')
 
-const __filename = import.meta.url.replace('file://', '')
-const __dirname = path.dirname(__filename)
 const noop = () => {}
 
-export default class Helper {
+global.Pear = new (class API {
+  static REF = null
+})()
+global.Pear.constructor.REF = require('pear-ref')
+
+module.exports = class Helper {
   static socketPath = isWindows ? '\\\\.\\pipe\\pear-api-test-ipc' : 'test.sock'
 
   static async startIpcServer({ handlers, teardown }) {
@@ -27,12 +30,12 @@ export default class Helper {
     state = {},
     runtimeArgv
   } = {}) {
-    if (global.Pear) {
-      console.error(global.Pear)
+    if (global.Pear?.constructor?.RTI) {
       throw Error('Prior Pear global not cleaned up')
     }
 
     class RigAPI {
+      static REF = global.Pear.constructor.REF
       static RTI = { checkout: { key: __dirname, length: null, fork: null } }
     }
     global.Pear = new RigAPI()
