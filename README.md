@@ -30,28 +30,27 @@ const pipe = runtime.start({ info: server.info() })
 Pear.teardown(() => pipe.end())
 ```
 
-
 ## API
 
 ### `new Bridge(opts) -> bridge`
 
 #### Options
 
-* `mount` - String. Mount path for lookups. Given `mount = '/ui` a URL pathname of `/foo` would be fetched from `/ui/foo`.
-* `waypoint` - String. Catch all HTML file for any unmatched pathnames. Use this for not found screens or in-app routing. Specify relative to `mount`.
-* `bypass` - Array. Default ['/node_modules']. Advanced. Mount bypass, allows dependency discovery from application root.
+- `mount` - String. Mount path for lookups. Given `mount = '/ui` a URL pathname of `/foo` would be fetched from `/ui/foo`.
+- `waypoint` - String. Catch all HTML file for any unmatched pathnames. Use this for not found screens or in-app routing. Specify relative to `mount`.
+- `bypass` - Array. Default ['/node_modules']. Advanced. Mount bypass, allows dependency discovery from application root.
 
 #### Methods
 
-* `ready()` - returns a promise that resolves when the server is listening
-* `close()` - closes the server
+- `ready()` - returns a promise that resolves when the server is listening
+- `close()` - closes the server
 
 #### Properties
 
-* `closed` - boolean indicating if server is closed
-* `opened` - boolean indicating if server is opened
-* `closing` - promise that resolves when server closes
-* `opening` - promise that resolves when server opens
+- `closed` - boolean indicating if server is closed
+- `opened` - boolean indicating if server is opened
+- `closing` - promise that resolves when server closes
+- `opening` - promise that resolves when server opens
 
 ## License
 
