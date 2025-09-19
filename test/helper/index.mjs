@@ -9,20 +9,20 @@ const noop = () => {}
 export default class Helper {
   static socketPath = isWindows ? '\\\\.\\pipe\\pear-api-test-ipc' : 'test.sock'
 
-  static async startIpcServer ({ handlers, teardown }) {
+  static async startIpcServer({ handlers, teardown }) {
     const server = new IPC.Server({ socketPath: this.socketPath, handlers })
     teardown(() => server.close())
     await server.ready()
     return server
   }
 
-  static async startIpcClient () {
+  static async startIpcClient() {
     const client = new IPC.Client({ socketPath: this.socketPath })
     await client.ready()
     return client
   }
 
-  static async rig ({
+  static async rig({
     ipc = { ref: noop, unref: noop },
     state = {},
     runtimeArgv

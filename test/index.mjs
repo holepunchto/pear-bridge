@@ -9,7 +9,9 @@ const noop = () => {}
 const entries = new Map()
 const files = new Map()
 const findFile = ({ seq }) => {
-  for (const [k, v] of files.entries()) { if (k.seq === seq) return v }
+  for (const [k, v] of files.entries()) {
+    if (k.seq === seq) return v
+  }
   return null
 }
 const headers = { 'x-pear': 'Pear 0' }
@@ -21,15 +23,25 @@ hook('setup rig', async function (t) {
       reported: noop,
       warmup: noop,
       exists: async (data) => files.has(data.key),
-      get: async (data) => (typeof data.key === 'string' ? files.get(data.key) : findFile(data.key)) || null,
+      get: async (data) =>
+        (typeof data.key === 'string'
+          ? files.get(data.key)
+          : findFile(data.key)) || null,
       versions: async () => ({ app: { fork: 0, length: 100, key: 'key' } }),
       entry: async (data) => entries.get(data.key) || null
     },
-    teardown: (fn) => { teardowns.push(fn) }
+    teardown: (fn) => {
+      teardowns.push(fn)
+    }
   })
   const ipc = await Helper.startIpcClient()
 
-  teardowns.push(await Helper.rig({ ipc, state: { config: { id: '0@a', name: 'pear-bridge' } } }))
+  teardowns.push(
+    await Helper.rig({
+      ipc,
+      state: { config: { id: '0@a', name: 'pear-bridge' } }
+    })
+  )
 })
 
 test('should get existing file', async function (t) {
@@ -38,12 +50,21 @@ test('should get existing file', async function (t) {
   t.teardown(() => bridge.close())
 
   files.set('/index.html', 'hello world')
-  t.teardown(() => { files.clear() })
+  t.teardown(() => {
+    files.clear()
+  })
 
-  const response = await fetch(`http://${bridge.host ?? '127.0.0.1'}:${bridge.port}/index.html`, { headers })
+  const response = await fetch(
+    `http://${bridge.host ?? '127.0.0.1'}:${bridge.port}/index.html`,
+    { headers }
+  )
 
   t.is(response.status, 200, 'GET request should return status 200')
-  t.is(await response.text(), 'hello world', 'GET request should return correct content')
+  t.is(
+    await response.text(),
+    'hello world',
+    'GET request should return correct content'
+  )
 })
 
 test('should return 404 with missing file', async function (t) {
@@ -51,7 +72,10 @@ test('should return 404 with missing file', async function (t) {
   await bridge.ready()
   t.teardown(() => bridge.close())
 
-  const response = await fetch(`http://${bridge.host ?? '127.0.0.1'}:${bridge.port}/index.html`, { headers })
+  const response = await fetch(
+    `http://${bridge.host ?? '127.0.0.1'}:${bridge.port}/index.html`,
+    { headers }
+  )
 
   t.is(response.status, 404, 'should return status 404')
   const text = await response.text()
@@ -64,9 +88,14 @@ test('should return 404 with missing file and not-found fallback', async functio
   t.teardown(() => bridge.close())
 
   files.set('node_modules/pear-bridge/not-found.html', 'not found fallback')
-  t.teardown(() => { files.clear() })
+  t.teardown(() => {
+    files.clear()
+  })
 
-  const response = await fetch(`http://${bridge.host ?? '127.0.0.1'}:${bridge.port}/index.html`, { headers })
+  const response = await fetch(
+    `http://${bridge.host ?? '127.0.0.1'}:${bridge.port}/index.html`,
+    { headers }
+  )
 
   t.is(response.status, 404, 'should return status 404')
   t.is(await response.text(), 'not found fallback', 'should return no content')
@@ -77,10 +106,19 @@ test('should handle missing x-pear header', async function (t) {
   await bridge.ready()
   t.teardown(() => bridge.close())
 
-  const response = await fetch(`http://${bridge.host ?? '127.0.0.1'}:${bridge.port}/index.html`)
+  const response = await fetch(
+    `http://${bridge.host ?? '127.0.0.1'}:${bridge.port}/index.html`
+  )
 
-  t.is(response.status, 400, 'should return status 400 for missing x-pear header')
-  t.ok(response.headers.get('content-type').includes('text/plain'), 'should have plain text content type for errors')
+  t.is(
+    response.status,
+    400,
+    'should return status 400 for missing x-pear header'
+  )
+  t.ok(
+    response.headers.get('content-type').includes('text/plain'),
+    'should have plain text content type for errors'
+  )
 })
 
 test('should handle invalid x-pear header', async function (t) {
@@ -88,12 +126,22 @@ test('should handle invalid x-pear header', async function (t) {
   await bridge.ready()
   t.teardown(() => bridge.close())
 
-  const response = await fetch(`http://${bridge.host ?? '127.0.0.1'}:${bridge.port}/index.html`, {
-    headers: { 'x-pear': 'Invalid' }
-  })
+  const response = await fetch(
+    `http://${bridge.host ?? '127.0.0.1'}:${bridge.port}/index.html`,
+    {
+      headers: { 'x-pear': 'Invalid' }
+    }
+  )
 
-  t.is(response.status, 400, 'should return status 400 for invalid x-pear header')
-  t.ok(response.headers.get('content-type').includes('text/plain'), 'should have plain text content type for errors')
+  t.is(
+    response.status,
+    400,
+    'should return status 400 for invalid x-pear header'
+  )
+  t.ok(
+    response.headers.get('content-type').includes('text/plain'),
+    'should have plain text content type for errors'
+  )
 })
 
 test('should handle devtools requests (+app+map)', async function (t) {
@@ -102,12 +150,20 @@ test('should handle devtools requests (+app+map)', async function (t) {
   t.teardown(() => bridge.close())
 
   files.set('/index.js', 'console.log("test")')
-  const fileNode = { seq: 1, key: '/index.js', value: { metadata: { type: 'commonjs', resolutions: [] } } }
+  const fileNode = {
+    seq: 1,
+    key: '/index.js',
+    value: { metadata: { type: 'commonjs', resolutions: [] } }
+  }
   files.set(fileNode, 'console.log("test")')
   entries.set('/index.js', fileNode)
-  t.teardown(() => { files.clear() })
+  t.teardown(() => {
+    files.clear()
+  })
 
-  const response = await fetch(`http://${bridge.host ?? '127.0.0.1'}:${bridge.port}/index.js+app+map`)
+  const response = await fetch(
+    `http://${bridge.host ?? '127.0.0.1'}:${bridge.port}/index.js+app+map`
+  )
 
   t.is(response.status, 200, 'devtools request should return 200')
 })
@@ -117,10 +173,16 @@ test('should handle unknown protocol', async function (t) {
   await bridge.ready()
   t.teardown(() => bridge.close())
 
-  const response = await fetch(`http://${bridge.host ?? '127.0.0.1'}:${bridge.port}/index.html+unknown+type`, { headers })
+  const response = await fetch(
+    `http://${bridge.host ?? '127.0.0.1'}:${bridge.port}/index.html+unknown+type`,
+    { headers }
+  )
 
   t.is(response.status, 400, 'should return status 400 for unknown protocol')
-  t.ok(response.headers.get('content-type').includes('text/plain'), 'should have plain text content type for errors')
+  t.ok(
+    response.headers.get('content-type').includes('text/plain'),
+    'should have plain text content type for errors'
+  )
 })
 
 test('should serve javascript files with correct content type', async function (t) {
@@ -129,18 +191,35 @@ test('should serve javascript files with correct content type', async function (
   t.teardown(() => bridge.close())
 
   files.set('/script.js', 'console.log("test")')
-  const fileNode = { seq: 1, key: '/script.js', value: { metadata: { type: 'commonjs', resolutions: [] } } }
+  const fileNode = {
+    seq: 1,
+    key: '/script.js',
+    value: { metadata: { type: 'commonjs', resolutions: [] } }
+  }
   files.set(fileNode, 'console.log("test")')
   entries.set('/script.js', fileNode)
-  t.teardown(() => { files.clear() })
-  t.teardown(() => { entries.clear() })
+  t.teardown(() => {
+    files.clear()
+  })
+  t.teardown(() => {
+    entries.clear()
+  })
 
-  const response = await fetch(`http://${bridge.host ?? '127.0.0.1'}:${bridge.port}/script.js`, { headers })
+  const response = await fetch(
+    `http://${bridge.host ?? '127.0.0.1'}:${bridge.port}/script.js`,
+    { headers }
+  )
 
   t.ok(response.status === 200, 'should return status 200')
-  t.ok(response.headers.get('content-type').includes('application/javascript'), 'should have correct content type')
+  t.ok(
+    response.headers.get('content-type').includes('application/javascript'),
+    'should have correct content type'
+  )
 
-  t.ok((await response.text()).includes('sourceURL'), 'should have processed the js file')
+  t.ok(
+    (await response.text()).includes('sourceURL'),
+    'should have processed the js file'
+  )
 })
 
 test('should serve HTML files with correct content type', async function (t) {
@@ -149,13 +228,25 @@ test('should serve HTML files with correct content type', async function (t) {
   t.teardown(() => bridge.close())
 
   files.set('/page.html', '<html><body>test</body></html>')
-  t.teardown(() => { files.clear() })
+  t.teardown(() => {
+    files.clear()
+  })
 
-  const response = await fetch(`http://${bridge.host ?? '127.0.0.1'}:${bridge.port}/page.html`, { headers })
+  const response = await fetch(
+    `http://${bridge.host ?? '127.0.0.1'}:${bridge.port}/page.html`,
+    { headers }
+  )
 
   t.is(response.status, 200, 'should return status 200')
-  t.ok(response.headers.get('content-type').includes('text/html'), 'should have correct content type')
-  t.is(await response.text(), '<html><body>test</body></html>', 'should return correct HTML content')
+  t.ok(
+    response.headers.get('content-type').includes('text/html'),
+    'should have correct content type'
+  )
+  t.is(
+    await response.text(),
+    '<html><body>test</body></html>',
+    'should return correct HTML content'
+  )
 })
 
 test('should serve CSS files with correct content type', async function (t) {
@@ -164,13 +255,25 @@ test('should serve CSS files with correct content type', async function (t) {
   t.teardown(() => bridge.close())
 
   files.set('/style.css', 'body { color: red; }')
-  t.teardown(() => { files.clear() })
+  t.teardown(() => {
+    files.clear()
+  })
 
-  const response = await fetch(`http://${bridge.host ?? '127.0.0.1'}:${bridge.port}/style.css`, { headers })
+  const response = await fetch(
+    `http://${bridge.host ?? '127.0.0.1'}:${bridge.port}/style.css`,
+    { headers }
+  )
 
   t.is(response.status, 200, 'should return status 200')
-  t.ok(response.headers.get('content-type').includes('text/css'), 'should have correct content type')
-  t.is(await response.text(), 'body { color: red; }', 'should return correct CSS content')
+  t.ok(
+    response.headers.get('content-type').includes('text/css'),
+    'should have correct content type'
+  )
+  t.is(
+    await response.text(),
+    'body { color: red; }',
+    'should return correct CSS content'
+  )
 })
 
 test('should serve JSON files with correct content type', async function (t) {
@@ -179,14 +282,29 @@ test('should serve JSON files with correct content type', async function (t) {
   t.teardown(() => bridge.close())
 
   files.set('/data.json', '{"test": "value"}')
-  t.teardown(() => { files.clear() })
+  t.teardown(() => {
+    files.clear()
+  })
 
-  const response = await fetch(`http://${bridge.host ?? '127.0.0.1'}:${bridge.port}/data.json`, { headers })
+  const response = await fetch(
+    `http://${bridge.host ?? '127.0.0.1'}:${bridge.port}/data.json`,
+    { headers }
+  )
 
   t.is(response.status, 200, 'should return status 200')
-  t.ok(response.headers.get('content-type').includes('application/json'), 'should have correct content type for JSON')
-  t.ok(response.headers.get('content-type').includes('charset=utf-8'), 'should include UTF-8 charset')
-  t.is(await response.text(), '{"test": "value"}', 'should return correct JSON content')
+  t.ok(
+    response.headers.get('content-type').includes('application/json'),
+    'should have correct content type for JSON'
+  )
+  t.ok(
+    response.headers.get('content-type').includes('charset=utf-8'),
+    'should include UTF-8 charset'
+  )
+  t.is(
+    await response.text(),
+    '{"test": "value"}',
+    'should return correct JSON content'
+  )
 })
 
 test('should handle root path redirect to index.html', async function (t) {
@@ -195,12 +313,21 @@ test('should handle root path redirect to index.html', async function (t) {
   t.teardown(() => bridge.close())
 
   files.set('/index.html', '<html><body>root page</body></html>')
-  t.teardown(() => { files.clear() })
+  t.teardown(() => {
+    files.clear()
+  })
 
-  const response = await fetch(`http://${bridge.host ?? '127.0.0.1'}:${bridge.port}/`, { headers })
+  const response = await fetch(
+    `http://${bridge.host ?? '127.0.0.1'}:${bridge.port}/`,
+    { headers }
+  )
 
   t.is(response.status, 200, 'should return status 200')
-  t.is(await response.text(), '<html><body>root page</body></html>', 'should serve index.html for root path')
+  t.is(
+    await response.text(),
+    '<html><body>root page</body></html>',
+    'should serve index.html for root path'
+  )
 })
 
 test('should handle file extension fallback (.html)', async function (t) {
@@ -209,12 +336,21 @@ test('should handle file extension fallback (.html)', async function (t) {
   t.teardown(() => bridge.close())
 
   files.set('/page.html', '<html><body>page content</body></html>')
-  t.teardown(() => { files.clear() })
+  t.teardown(() => {
+    files.clear()
+  })
 
-  const response = await fetch(`http://${bridge.host ?? '127.0.0.1'}:${bridge.port}/page`, { headers })
+  const response = await fetch(
+    `http://${bridge.host ?? '127.0.0.1'}:${bridge.port}/page`,
+    { headers }
+  )
 
   t.is(response.status, 200, 'should return status 200')
-  t.is(await response.text(), '<html><body>page content</body></html>', 'should serve .html file for path without extension')
+  t.is(
+    await response.text(),
+    '<html><body>page content</body></html>',
+    'should serve .html file for path without extension'
+  )
 })
 
 test('should handle index.html fallback for directories', async function (t) {
@@ -223,12 +359,21 @@ test('should handle index.html fallback for directories', async function (t) {
   t.teardown(() => bridge.close())
 
   files.set('/folder/index.html', '<html><body>folder index</body></html>')
-  t.teardown(() => { files.clear() })
+  t.teardown(() => {
+    files.clear()
+  })
 
-  const response = await fetch(`http://${bridge.host ?? '127.0.0.1'}:${bridge.port}/folder`, { headers })
+  const response = await fetch(
+    `http://${bridge.host ?? '127.0.0.1'}:${bridge.port}/folder`,
+    { headers }
+  )
 
   t.is(response.status, 200, 'should return status 200')
-  t.is(await response.text(), '<html><body>folder index</body></html>', 'should serve index.html for directory path')
+  t.is(
+    await response.text(),
+    '<html><body>folder index</body></html>',
+    'should serve index.html for directory path'
+  )
 })
 
 test('should handle resolve protocol', async function (t) {
@@ -237,13 +382,25 @@ test('should handle resolve protocol', async function (t) {
   t.teardown(() => bridge.close())
 
   files.set('/test.js', 'console.log("test")')
-  t.teardown(() => { files.clear() })
+  t.teardown(() => {
+    files.clear()
+  })
 
-  const response = await fetch(`http://${bridge.host ?? '127.0.0.1'}:${bridge.port}/test.js+resolve`, { headers })
+  const response = await fetch(
+    `http://${bridge.host ?? '127.0.0.1'}:${bridge.port}/test.js+resolve`,
+    { headers }
+  )
 
   t.is(response.status, 200, 'should return status 200')
-  t.ok(response.headers.get('content-type').includes('text/plain'), 'should have plain text content type')
-  t.is(await response.text(), '/test.js', 'should return file path for resolve protocol')
+  t.ok(
+    response.headers.get('content-type').includes('text/plain'),
+    'should have plain text content type'
+  )
+  t.is(
+    await response.text(),
+    '/test.js',
+    'should return file path for resolve protocol'
+  )
 })
 
 test('should handle binary files', async function (t) {
@@ -251,15 +408,27 @@ test('should handle binary files', async function (t) {
   await bridge.ready()
   t.teardown(() => bridge.close())
 
-  const binaryData = Buffer.from([0x89, 0x50, 0x4E, 0x47])
+  const binaryData = Buffer.from([0x89, 0x50, 0x4e, 0x47])
   files.set('/image.png', binaryData)
-  t.teardown(() => { files.clear() })
+  t.teardown(() => {
+    files.clear()
+  })
 
-  const response = await fetch(`http://${bridge.host ?? '127.0.0.1'}:${bridge.port}/image.png`, { headers })
+  const response = await fetch(
+    `http://${bridge.host ?? '127.0.0.1'}:${bridge.port}/image.png`,
+    { headers }
+  )
 
   t.is(response.status, 200, 'should return status 200')
-  t.ok(response.headers.get('content-type').includes('image/png'), 'should have correct content type for PNG')
-  t.is(await response.text(), binaryData.toString(), 'should return correct binary data')
+  t.ok(
+    response.headers.get('content-type').includes('image/png'),
+    'should have correct content type for PNG'
+  )
+  t.is(
+    await response.text(),
+    binaryData.toString(),
+    'should return correct binary data'
+  )
 })
 
 test('should handle files with no extension', async function (t) {
@@ -268,13 +437,25 @@ test('should handle files with no extension', async function (t) {
   t.teardown(() => bridge.close())
 
   files.set('/LICENSE', 'MIT License content')
-  t.teardown(() => { files.clear() })
+  t.teardown(() => {
+    files.clear()
+  })
 
-  const response = await fetch(`http://${bridge.host ?? '127.0.0.1'}:${bridge.port}/LICENSE`, { headers })
+  const response = await fetch(
+    `http://${bridge.host ?? '127.0.0.1'}:${bridge.port}/LICENSE`,
+    { headers }
+  )
 
   t.is(response.status, 200, 'should return status 200')
-  t.ok(response.headers.get('content-type').includes('application/octet-stream'), 'should default to octet-stream')
-  t.is(await response.text(), 'MIT License content', 'should return correct content')
+  t.ok(
+    response.headers.get('content-type').includes('application/octet-stream'),
+    'should default to octet-stream'
+  )
+  t.is(
+    await response.text(),
+    'MIT License content',
+    'should return correct content'
+  )
 })
 
 test('should use mount option for file lookups', async function (t) {
@@ -286,12 +467,21 @@ test('should use mount option for file lookups', async function (t) {
   t.teardown(() => bridge.close())
 
   files.set('/ui/index.html', 'mounted content')
-  t.teardown(() => { files.clear() })
+  t.teardown(() => {
+    files.clear()
+  })
 
-  const response = await fetch(`http://${bridge.host ?? '127.0.0.1'}:${bridge.port}/index.html`, { headers })
+  const response = await fetch(
+    `http://${bridge.host ?? '127.0.0.1'}:${bridge.port}/index.html`,
+    { headers }
+  )
 
   t.is(response.status, 200, 'should find file with under mount prefix')
-  t.is(await response.text(), 'mounted content', 'should return correct content')
+  t.is(
+    await response.text(),
+    'mounted content',
+    'should return correct content'
+  )
 })
 
 test('should use bypass option to skip mount for certain paths', async function (t) {
@@ -304,12 +494,21 @@ test('should use bypass option to skip mount for certain paths', async function 
   t.teardown(() => bridge.close())
 
   files.set('/node_modules/package.json', '{"name": "test-package"}')
-  t.teardown(() => { files.clear() })
+  t.teardown(() => {
+    files.clear()
+  })
 
-  const response = await fetch(`http://${bridge.host ?? '127.0.0.1'}:${bridge.port}/node_modules/package.json`, { headers })
+  const response = await fetch(
+    `http://${bridge.host ?? '127.0.0.1'}:${bridge.port}/node_modules/package.json`,
+    { headers }
+  )
 
   t.is(response.status, 200, 'should find file bypassing mount prefix')
-  t.is(await response.text(), '{"name": "test-package"}', 'should return content from bypassed location')
+  t.is(
+    await response.text(),
+    '{"name": "test-package"}',
+    'should return content from bypassed location'
+  )
 })
 
 test('should use waypoint for unmatched HTML requests', async function (t) {
@@ -321,12 +520,21 @@ test('should use waypoint for unmatched HTML requests', async function (t) {
   t.teardown(() => bridge.close())
 
   files.set('/fallback.html', '<html><body>Not Found Page</body></html>')
-  t.teardown(() => { files.clear() })
+  t.teardown(() => {
+    files.clear()
+  })
 
-  const response = await fetch(`http://${bridge.host ?? '127.0.0.1'}:${bridge.port}/nonexistent.html`, { headers })
+  const response = await fetch(
+    `http://${bridge.host ?? '127.0.0.1'}:${bridge.port}/nonexistent.html`,
+    { headers }
+  )
 
   t.is(response.status, 200, 'should return waypoint for missing HTML files')
-  t.is(await response.text(), '<html><body>Not Found Page</body></html>', 'should return waypoint content')
+  t.is(
+    await response.text(),
+    '<html><body>Not Found Page</body></html>',
+    'should return waypoint content'
+  )
 })
 
 test('should combine mount and waypoint options', async function (t) {
@@ -339,12 +547,25 @@ test('should combine mount and waypoint options', async function (t) {
   t.teardown(() => bridge.close())
 
   files.set('/app/index.html', '<html><body>App SPA</body></html>')
-  t.teardown(() => { files.clear() })
+  t.teardown(() => {
+    files.clear()
+  })
 
-  const response = await fetch(`http://${bridge.host ?? '127.0.0.1'}:${bridge.port}/some/route.html`, { headers })
+  const response = await fetch(
+    `http://${bridge.host ?? '127.0.0.1'}:${bridge.port}/some/route.html`,
+    { headers }
+  )
 
-  t.is(response.status, 200, 'should return waypoint for missing HTML files with mount')
-  t.is(await response.text(), '<html><body>App SPA</body></html>', 'should return waypoint content from mounted location')
+  t.is(
+    response.status,
+    200,
+    'should return waypoint for missing HTML files with mount'
+  )
+  t.is(
+    await response.text(),
+    '<html><body>App SPA</body></html>',
+    'should return waypoint content from mounted location'
+  )
 })
 
 test('should handle large file requests', async function (t) {
@@ -354,12 +575,21 @@ test('should handle large file requests', async function (t) {
 
   const largeContent = 'x'.repeat(100_000_000)
   files.set('/large.txt', largeContent)
-  t.teardown(() => { files.clear() })
+  t.teardown(() => {
+    files.clear()
+  })
 
-  const response = await fetch(`http://${bridge.host ?? '127.0.0.1'}:${bridge.port}/large.txt`, { headers })
+  const response = await fetch(
+    `http://${bridge.host ?? '127.0.0.1'}:${bridge.port}/large.txt`,
+    { headers }
+  )
 
   t.is(response.status, 200, 'should return status 200')
-  t.is((await response.text()).length, 100_000_000, 'should serve complete large file')
+  t.is(
+    (await response.text()).length,
+    100_000_000,
+    'should serve complete large file'
+  )
 })
 
 test('should handle concurrent requests', async function (t) {
@@ -370,12 +600,20 @@ test('should handle concurrent requests', async function (t) {
   files.set('/file1.txt', 'content1')
   files.set('/file2.txt', 'content2')
   files.set('/file3.txt', 'content3')
-  t.teardown(() => { files.clear() })
+  t.teardown(() => {
+    files.clear()
+  })
 
   const requests = [
-    fetch(`http://${bridge.host ?? '127.0.0.1'}:${bridge.port}/file1.txt`, { headers }),
-    fetch(`http://${bridge.host ?? '127.0.0.1'}:${bridge.port}/file2.txt`, { headers }),
-    fetch(`http://${bridge.host ?? '127.0.0.1'}:${bridge.port}/file3.txt`, { headers })
+    fetch(`http://${bridge.host ?? '127.0.0.1'}:${bridge.port}/file1.txt`, {
+      headers
+    }),
+    fetch(`http://${bridge.host ?? '127.0.0.1'}:${bridge.port}/file2.txt`, {
+      headers
+    }),
+    fetch(`http://${bridge.host ?? '127.0.0.1'}:${bridge.port}/file3.txt`, {
+      headers
+    })
   ]
 
   const responses = await Promise.all(requests)
@@ -384,9 +622,21 @@ test('should handle concurrent requests', async function (t) {
   t.is(responses[1].status, 200, 'second request should succeed')
   t.is(responses[2].status, 200, 'third request should succeed')
 
-  t.is(await responses[0].text(), 'content1', 'first response should have correct content')
-  t.is(await responses[1].text(), 'content2', 'second response should have correct content')
-  t.is(await responses[2].text(), 'content3', 'third response should have correct content')
+  t.is(
+    await responses[0].text(),
+    'content1',
+    'first response should have correct content'
+  )
+  t.is(
+    await responses[1].text(),
+    'content2',
+    'second response should have correct content'
+  )
+  t.is(
+    await responses[2].text(),
+    'content3',
+    'third response should have correct content'
+  )
 })
 
 test('should handle malformed URLs gracefully', async function (t) {
@@ -394,10 +644,16 @@ test('should handle malformed URLs gracefully', async function (t) {
   await bridge.ready()
   t.teardown(() => bridge.close())
 
-  const response = await fetch(`http://${bridge.host ?? '127.0.0.1'}:${bridge.port}/%invalid%url%`, { headers })
+  const response = await fetch(
+    `http://${bridge.host ?? '127.0.0.1'}:${bridge.port}/%invalid%url%`,
+    { headers }
+  )
 
   t.ok(response.status, 400, 'should return 400 for malformed URLs')
-  t.ok((await response.text()).includes('Malformed URL:'), 'should return error message for malformed URL')
+  t.ok(
+    (await response.text()).includes('Malformed URL:'),
+    'should return error message for malformed URL'
+  )
 })
 
 hook('teardown', async function (t) {
