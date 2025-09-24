@@ -246,6 +246,8 @@ module.exports = class Http extends ReadyResource {
   }
 
   #calculateServerPort() {
+    if (!global.Pear?.app?.key && !global.Pear?.app?.dir) return 0
+
     const minPort = 1000
     const maxPort = 65536
 
@@ -254,10 +256,11 @@ module.exports = class Http extends ReadyResource {
     if (key) {
       seed = key
     } else {
-      const hash = Buffer.allocUnsafe(32)
-      sodium.crypto_generichash(hash, Pear.app.dir)
-      seed = hash
+      const out = Buffer.alloc(sodium.crypto_generichash_BYTES)
+      sodium.crypto_generichash(out, Buffer.from(Pear.app.dir))
+      seed = out
     }
+
     return minPort + ((seed[0] + seed[1] * 256) % (maxPort - minPort))
   }
 
