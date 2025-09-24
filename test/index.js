@@ -770,6 +770,22 @@ test('can run two bridges without key', async function (t) {
   })
 })
 
+test('bridge port is random if key and dir are null', async function (t) {
+  global.Pear.app.key = null
+  global.Pear.app.dir = null
+
+  const bridge = new Bridge()
+  await bridge.ready()
+
+  t.ok(bridge.port > 1000 && bridge.port < 65536)
+
+  t.teardown(() => {
+    bridge.close()
+    global.Pear.app.key = null
+    global.Pear.app.dir = null
+  })
+})
+
 hook('teardown', async function (t) {
   for (const teardown of teardowns) {
     try {

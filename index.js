@@ -245,7 +245,7 @@ module.exports = class Http extends ReadyResource {
     }
   }
 
-  #calculateServerPort() {
+  #port() {
     if (!global.Pear?.app?.key && !global.Pear?.app?.dir) return 0
 
     const minPort = 1000
@@ -253,7 +253,7 @@ module.exports = class Http extends ReadyResource {
 
     const key = Pear.app.key
     let seed = null
-    if (key) {
+    if (key !== null) {
       seed = key
     } else {
       const out = Buffer.alloc(sodium.crypto_generichash_BYTES)
@@ -267,7 +267,7 @@ module.exports = class Http extends ReadyResource {
   async _open() {
     await this.drive.ready()
     try {
-      await listen(this.server, this.#calculateServerPort(), '127.0.0.1')
+      await listen(this.server, this.#port(), '127.0.0.1')
     } catch {
       await listen(this.server, 0, '127.0.0.1')
     }
