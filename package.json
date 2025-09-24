@@ -7,7 +7,7 @@
     "format": "prettier --write .",
     "lint": "prettier --check .",
     "test": "brittle-bare test/index.js",
-    "coverage": "brittle-bare --coverage test/index.mjs"
+    "coverage": "brittle-bare --coverage test/index.js"
   },
   "files": [
     "mime.js",
