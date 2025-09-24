@@ -1,4 +1,5 @@
 const Helper = require('./helper') // must be first
+const sodium = require('sodium-native')
 const fetch = require('bare-fetch')
 const { test, hook } = require('brittle')
 const Bridge = require('..')
@@ -653,6 +654,40 @@ test('should handle malformed URLs gracefully', async function (t) {
     (await response.text()).includes('Malformed URL:'),
     'should return error message for malformed URL'
   )
+})
+
+test('server port is deterministic with app key', async function (t) {
+  const buf = Buffer.allocUnsafe(32)
+  sodium.randombytes_buf(buf)
+  global.Pear.app.key = buf
+
+  const bridgeA = new Bridge()
+  await bridgeA.ready()
+  const portA = bridgeA.port
+  await bridgeA.close()
+
+  const bridgeB = new Bridge()
+  await bridgeB.ready()
+  const portB = bridgeB.port
+  await bridgeB.close()
+
+  t.is(portA, portB)
+})
+
+test('server port is deterministic without app key', async function (t) {
+  global.Pear.app.dir = '/app/path'
+
+  const bridgeA = new Bridge()
+  await bridgeA.ready()
+  const portA = bridgeA.port
+  await bridgeA.close()
+
+  const bridgeB = new Bridge()
+  await bridgeB.ready()
+  const portB = bridgeB.port
+  await bridgeB.close()
+
+  t.is(portA, portB)
 })
 
 hook('teardown', async function (t) {
