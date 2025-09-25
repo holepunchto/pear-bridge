@@ -7,7 +7,7 @@
     "format": "prettier --write .",
     "lint": "prettier --check .",
     "test": "brittle-bare test/index.js",
-    "coverage": "brittle-bare --coverage test/index.mjs"
+    "coverage": "brittle-bare --coverage test/index.js"
   },
   "files": [
     "mime.js",
@@ -39,6 +39,7 @@
     "pear-stamp": "^1.0.1",
     "ready-resource": "^1.1.1",
     "script-linker": "^2.5.3",
+    "sodium-native": "^5.0.9",
     "streamx": "^2.21.1"
   },
   "devDependencies": {
@@ -46,9 +47,9 @@
     "brittle": "^3.17.1",
     "pear-api": "^1.29.1",
     "pear-ipc": "^5.5.0",
+    "pear-ref": "^1.0.2",
     "prettier": "^3.6.2",
     "prettier-config-holepunch": "^1.0.0",
-    "pear-ref": "^1.0.2",
     "which-runtime": "^1.3.0"
   }
 }

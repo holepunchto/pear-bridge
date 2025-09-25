@@ -1,4 +1,5 @@
 const Helper = require('./helper') // must be first
+const sodium = require('sodium-native')
 const fetch = require('bare-fetch')
 const { test, hook } = require('brittle')
 const Bridge = require('..')
@@ -653,6 +654,136 @@ test('should handle malformed URLs gracefully', async function (t) {
     (await response.text()).includes('Malformed URL:'),
     'should return error message for malformed URL'
   )
+})
+
+test('server port is deterministic with app key', async function (t) {
+  const buf = Buffer.allocUnsafe(32)
+  sodium.randombytes_buf(buf)
+  global.Pear.app.key = buf
+  global.Pear.app.dir = null
+
+  const bridgeA = new Bridge()
+  await bridgeA.ready()
+  const portA = bridgeA.port
+  await bridgeA.close()
+
+  const bridgeB = new Bridge()
+  await bridgeB.ready()
+  const portB = bridgeB.port
+  await bridgeB.close()
+
+  t.is(portA, portB)
+
+  const bufB = Buffer.allocUnsafe(32)
+  sodium.randombytes_buf(bufB)
+  global.Pear.app.key = bufB
+
+  const bridgeC = new Bridge()
+  await bridgeC.ready()
+  const portC = bridgeC.port
+  await bridgeC.close()
+
+  t.not(portC, portB)
+
+  t.teardown(() => {
+    global.Pear.app.key = null
+    global.Pear.app.dir = null
+  })
+})
+
+test('server port is deterministic without app key', async function (t) {
+  global.Pear.app.key = null
+  global.Pear.app.dir = '/app/path'
+
+  const bridgeA = new Bridge()
+  await bridgeA.ready()
+  const portA = bridgeA.port
+  await bridgeA.close()
+
+  const bridgeB = new Bridge()
+  await bridgeB.ready()
+  const portB = bridgeB.port
+  await bridgeB.close()
+
+  t.is(portA, portB)
+
+  global.Pear.app.dir = '/app/path-b'
+
+  const bridgeC = new Bridge()
+  await bridgeC.ready()
+  const portC = bridgeC.port
+  await bridgeC.close()
+
+  t.not(portC, portB)
+
+  t.teardown(() => {
+    global.Pear.app.key = null
+    global.Pear.app.dir = null
+  })
+})
+
+test('can run two bridges with key', async function (t) {
+  const buf = Buffer.allocUnsafe(32)
+  sodium.randombytes_buf(buf)
+  global.Pear.app.key = buf
+  global.Pear.app.dir = null
+
+  const bridgeA = new Bridge()
+  await bridgeA.ready()
+  const portA = bridgeA.port
+
+  const bridgeB = new Bridge()
+  await bridgeB.ready()
+  const portB = bridgeB.port
+
+  t.not(portA, portB)
+
+  t.teardown(() => {
+    bridgeA.close()
+    bridgeB.close()
+    global.Pear.app.key = null
+    global.Pear.app.dir = null
+  })
+})
+
+test('can run two bridges without key', async function (t) {
+  const buf = Buffer.allocUnsafe(32)
+  sodium.randombytes_buf(buf)
+  global.Pear.app.key = null
+  global.Pear.app.dir = '/app/path'
+
+  const bridgeA = new Bridge()
+  await bridgeA.ready()
+  const portA = bridgeA.port
+
+  const bridgeB = new Bridge()
+  await bridgeB.ready()
+  const portB = bridgeB.port
+
+  t.not(portA, portB)
+
+  t.teardown(() => {
+    bridgeA.close()
+    bridgeB.close()
+    global.Pear.app.key = null
+    global.Pear.app.dir = null
+  })
+})
+
+test('bridge port is random if key and dir are null', async function (t) {
+  global.Pear.app.key = null
+  global.Pear.app.dir = null
+
+  const bridge = new Bridge()
+  await bridge.ready()
+
+  t.ok(bridge.port > 1000 && bridge.port < 65536)
+
+  t.teardown(() => {
+    bridge.close()
+    global.Pear.app.key = null
+    global.Pear.app.dir = null
+  })
 })
 
 hook('teardown', async function (t) {

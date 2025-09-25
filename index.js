@@ -9,6 +9,7 @@ const gunk = require('pear-gunk')
 const stamp = require('pear-stamp')
 const AppDrive = require('pear-appdrive')
 const mime = require('get-mime-type')
+const sodium = require('sodium-native')
 const { ERR_HTTP_BAD_REQUEST, ERR_HTTP_NOT_FOUND } = require('./errors')
 
 module.exports = class Http extends ReadyResource {
@@ -244,9 +245,32 @@ module.exports = class Http extends ReadyResource {
     }
   }
 
+  #port() {
+    if (!global.Pear?.app?.key && !global.Pear?.app?.dir) return 0
+
+    const minPort = 1000
+    const maxPort = 65536
+
+    const key = Pear.app.key
+    let seed = null
+    if (key !== null) {
+      seed = key
+    } else {
+      const out = Buffer.alloc(sodium.crypto_generichash_BYTES)
+      sodium.crypto_generichash(out, Buffer.from(Pear.app.dir))
+      seed = out
+    }
+
+    return minPort + ((seed[0] + seed[1] * 256) % (maxPort - minPort))
+  }
+
   async _open() {
     await this.drive.ready()
-    await listen(this.server, 0, '127.0.0.1')
+    try {
+      await listen(this.server, this.#port(), '127.0.0.1')
+    } catch {
+      await listen(this.server, 0, '127.0.0.1')
+    }
     this.port = this.server.address().port
     this.addr = 'http://localhost:' + this.port
   }
