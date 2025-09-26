@@ -786,6 +786,21 @@ test('bridge port is random if key and dir are null', async function (t) {
   })
 })
 
+test('bridge port is 9342 for keet', async function (t) {
+  global.Pear.app.alias = 'keet'
+
+  const bridge = new Bridge()
+  await bridge.ready()
+
+  t.ok(bridge.port, 9432)
+
+  t.teardown(() => {
+    bridge.close()
+    global.Pear.app.key = null
+    global.Pear.app.dir = null
+  })
+})
+
 hook('teardown', async function (t) {
   for (const teardown of teardowns) {
     try {

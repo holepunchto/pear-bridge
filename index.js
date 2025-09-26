@@ -247,6 +247,7 @@ module.exports = class Http extends ReadyResource {
 
   #port() {
     if (!global.Pear?.app?.key && !global.Pear?.app?.dir) return 0
+    if (global.Pear?.app?.alias === 'keet') return 9342 // TODO remove after keet localStorage migration
 
     const minPort = 1000
     const maxPort = 65536
