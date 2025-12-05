@@ -19,8 +19,9 @@ module.exports = class Http extends ReadyResource {
     this.bypass = this.opts.bypass ?? ['/node_modules']
     this.mount = this.opts.mount ?? ''
     this.waypoint = this.opts.waypoint ?? null
-    if (this.waypoint && this.waypoint[0] !== '/')
+    if (this.waypoint && this.waypoint[0] !== '/') {
       this.waypoint = '/' + this.waypoint
+    }
     if (this.mount && this.mount[0] !== '/') this.mount = '/' + this.mount
     this.ipc = Pear[Pear.constructor.IPC]
     this.drive = new AppDrive()
@@ -39,8 +40,9 @@ module.exports = class Http extends ReadyResource {
 
         const isDevtools = req.url.includes('+app+map')
 
-        if ((!xPear || !xPear.startsWith('Pear')) && !isDevtools)
+        if ((!xPear || !xPear.startsWith('Pear')) && !isDevtools) {
           throw ERR_HTTP_BAD_REQUEST()
+        }
         const [url, protocol = 'app', type = 'app'] = req.url.split('+')
         req.url = url === '/' ? '/index.html' : url
         if (protocol !== 'app' && protocol !== 'resolve') {
@@ -106,17 +108,19 @@ module.exports = class Http extends ReadyResource {
     try {
       const [, startId] = id.split('@')
       const reported = await this.ipc.reported({ startId })
-      if (reported?.err)
+      if (reported?.err) {
         throw ERR_HTTP_NOT_FOUND(
           'Not Found - ' +
             (reported.err.code || 'ERR_UNKNOWN') +
             ' - ' +
             reported.err.message
         )
+      }
       return await this.#lookup(protocol, type, req, res)
     } catch (err) {
-      if (err.code === 'ERR_HTTP_NOT_FOUND')
+      if (err.code === 'ERR_HTTP_NOT_FOUND') {
         return await this.#notFound(req, res)
+      }
       throw err
     }
   }
@@ -198,21 +202,24 @@ module.exports = class Http extends ReadyResource {
         if (
           matches[0].status === 'fulfilled' &&
           this.waypoint !== matches[0].value
-        )
+        ) {
           return matches[0]
+        }
         if (
           matches[1].status === 'fulfilled' &&
           this.waypoint !== matches[1].value
-        )
+        ) {
           return matches[1]
+        }
       }
       throw ERR_HTTP_NOT_FOUND(`Not Found: "${link.filename}"`)
     }
 
     if (protocol === 'resolve') {
       res.setHeader('Content-Type', 'text/plain; charset=UTF-8')
-      if (!link.resolve && !link.dirname && !link.filename)
+      if (!link.resolve && !link.dirname && !link.filename) {
         throw ERR_HTTP_NOT_FOUND(`Not Found: "${req.url}"`)
+      }
       res.end(link.filename)
       return
     }
@@ -238,8 +245,9 @@ module.exports = class Http extends ReadyResource {
       }
 
       const buffer = await this.ipc.get({ key: link.filename })
-      if (buffer === null)
+      if (buffer === null) {
         throw new ERR_HTTP_NOT_FOUND(`Not Found: "${link.filename}"`)
+      }
 
       res.end(buffer)
     }
