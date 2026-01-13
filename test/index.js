@@ -870,6 +870,46 @@ test('bridge should support relative imports when mount is set', async function 
   }
 })
 
+test('bridge should support loading from node_modules even when mount is set', async function (t) {
+  const originals = {
+    exists: handlers.exists,
+    get: handlers.get,
+    entry: handlers.entry
+  }
+  t.teardown(() => {
+    handlers.exists = originals.exists
+    handlers.get = originals.get
+    handlers.entry = originals.entry
+  })
+
+  const drive = new Localdrive(path.join(FIXTURES_DIR, 'mount'))
+  await drive.ready()
+  t.teardown(() => drive.close())
+
+  handlers.exists = async (data) => drive.exists(data.key)
+  handlers.get = async (data) => drive.get(data.key)
+  handlers.entry = async (data) => drive.entry(data.key)
+
+  const bridge = new Bridge({ mount: '/ui' })
+  await bridge.ready()
+  t.teardown(() => bridge.close())
+
+  t.comment('should serve file from node_modules ignoring mount prefix')
+  const response = await fetch(
+    `http://${bridge.host ?? '127.0.0.1'}:${bridge.port}/node_modules/dummy-dependency/index.js+app+cjs`,
+    { headers }
+  )
+
+  t.ok(response.status === 200, 'should return status 200')
+  t.ok(
+    response.headers.get('content-type').includes('application/javascript'),
+    'should have correct content type'
+  )
+
+  const text = await response.text()
+  t.ok(text.includes('this is a dependency'), 'should return the module file')
+})
+
 hook('teardown', async function (t) {
   for (const teardown of teardowns) {
     try {
