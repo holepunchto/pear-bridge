@@ -45,6 +45,7 @@
   "devDependencies": {
     "bare-fetch": "^2.4.2",
     "brittle": "^3.17.1",
+    "localdrive": "^2.2.0",
     "lunte": "^1.3.0",
     "pear-api": "^1.29.1",
     "pear-ipc": "^5.5.0",

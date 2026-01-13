@@ -2,9 +2,12 @@ const Helper = require('./helper') // must be first
 const sodium = require('sodium-native')
 const fetch = require('bare-fetch')
 const { test, hook } = require('brittle')
+const Localdrive = require('localdrive')
+const path = require('bare-path')
 const Bridge = require('..')
 
 const noop = () => {}
+const FIXTURES_DIR = path.join(__dirname, 'fixtures')
 
 const entries = new Map()
 const files = new Map()
@@ -17,18 +20,22 @@ const findFile = ({ seq }) => {
 const headers = { 'x-pear': 'Pear 0' }
 
 const teardowns = []
+const handlers = {
+  exists: async (data) => files.has(data.key),
+  get: async (data) =>
+    (typeof data.key === 'string' ? files.get(data.key) : findFile(data.key)) ||
+    null,
+  entry: async (data) => entries.get(data.key) || null
+}
 hook('setup rig', async function (t) {
   await Helper.startIpcServer({
     handlers: {
       reported: noop,
       warmup: noop,
-      exists: async (data) => files.has(data.key),
-      get: async (data) =>
-        (typeof data.key === 'string'
-          ? files.get(data.key)
-          : findFile(data.key)) || null,
       versions: async () => ({ app: { fork: 0, length: 100, key: 'key' } }),
-      entry: async (data) => entries.get(data.key) || null
+      exists: (data) => handlers.exists(data),
+      get: (data) => handlers.get(data),
+      entry: (data) => handlers.entry(data)
     },
     teardown: (fn) => {
       teardowns.push(fn)
@@ -799,6 +806,108 @@ test('bridge port is 9342 for keet', async function (t) {
     global.Pear.app.key = null
     global.Pear.app.dir = null
   })
+})
+
+test('should support relative imports when mount is set', async function (t) {
+  const originals = {
+    exists: handlers.exists,
+    get: handlers.get,
+    entry: handlers.entry
+  }
+  t.teardown(() => {
+    handlers.exists = originals.exists
+    handlers.get = originals.get
+    handlers.entry = originals.entry
+  })
+
+  const drive = new Localdrive(path.join(FIXTURES_DIR, 'mount'))
+  await drive.ready()
+  t.teardown(() => drive.close())
+
+  handlers.exists = async (data) => drive.exists(data.key)
+  handlers.get = async (data) => drive.get(data.key)
+  handlers.entry = async (data) => drive.entry(data.key)
+
+  const bridge = new Bridge({ mount: '/ui' })
+  await bridge.ready()
+  t.teardown(() => bridge.close())
+  {
+    t.comment('should serve index.html with mount prefix')
+    const response = await fetch(
+      `http://${bridge.host ?? '127.0.0.1'}:${bridge.port}/index.html`,
+      { headers }
+    )
+
+    t.is(response.status, 200, 'should return status 200')
+    t.ok(
+      response.headers.get('content-type').includes('text/html'),
+      'should have correct content type'
+    )
+
+    const text = await response.text()
+    t.ok(text.includes('<html>'), 'should return the html file')
+  }
+
+  {
+    t.comment('should serve app.js with mount prefix')
+    const response = await fetch(
+      `http://${bridge.host ?? '127.0.0.1'}:${bridge.port}/app.js`,
+      { headers }
+    )
+
+    t.is(response.status, 200, 'should return status 200')
+    t.ok(
+      response.headers.get('content-type').includes('application/javascript'),
+      'should have correct content type'
+    )
+
+    const text = await response.text()
+    t.ok(text.includes('sourceURL'), 'should have processed the js file')
+    t.ok(
+      text.includes('import mod from "/mod.js+app+esm"'),
+      'should not include mount from processed relative import'
+    )
+  }
+})
+
+test('should support loading from node_modules even when mount is set', async function (t) {
+  const originals = {
+    exists: handlers.exists,
+    get: handlers.get,
+    entry: handlers.entry
+  }
+  t.teardown(() => {
+    handlers.exists = originals.exists
+    handlers.get = originals.get
+    handlers.entry = originals.entry
+  })
+
+  const drive = new Localdrive(path.join(FIXTURES_DIR, 'mount'))
+  await drive.ready()
+  t.teardown(() => drive.close())
+
+  handlers.exists = async (data) => drive.exists(data.key)
+  handlers.get = async (data) => drive.get(data.key)
+  handlers.entry = async (data) => drive.entry(data.key)
+
+  const bridge = new Bridge({ mount: '/ui' })
+  await bridge.ready()
+  t.teardown(() => bridge.close())
+
+  t.comment('should serve file from node_modules ignoring mount prefix')
+  const response = await fetch(
+    `http://${bridge.host ?? '127.0.0.1'}:${bridge.port}/node_modules/dummy-dependency/index.js+app+cjs`,
+    { headers }
+  )
+
+  t.is(response.status, 200, 'should return status 200')
+  t.ok(
+    response.headers.get('content-type').includes('application/javascript'),
+    'should have correct content type'
+  )
+
+  const text = await response.text()
+  t.ok(text.includes('this is a dependency'), 'should return the module file')
 })
 
 hook('teardown', async function (t) {

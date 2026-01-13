@@ -28,10 +28,16 @@ module.exports = class Http extends ReadyResource {
     this.linker = new ScriptLinker(this.drive, {
       builtins: gunk.builtins,
       map: gunk.app.map,
-      mapImport: gunk.app.mapImport,
       symbol: gunk.app.symbol,
       protocol: gunk.app.protocol,
-      runtimes: gunk.app.runtimes
+      runtimes: gunk.app.runtimes,
+      mapImport: (path, dir) => {
+        if (this.mount) {
+          if (path.startsWith(this.mount)) path = path.slice(this.mount.length)
+          if (dir.startsWith(this.mount)) dir = dir.slice(this.mount.length)
+        }
+        return gunk.app.mapImport(path, dir)
+      }
     })
     this.connections = new Set()
     this.server = http.createServer(async (req, res) => {
