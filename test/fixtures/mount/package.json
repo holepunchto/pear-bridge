@@ -1,0 +1,8 @@
+{
+  "name": "app",
+  "main": "index.js",
+  "type": "module",
+  "pear": {
+    "name": "app"
+  }
+}
