@@ -32,8 +32,10 @@ module.exports = class Http extends ReadyResource {
       protocol: gunk.app.protocol,
       runtimes: gunk.app.runtimes,
       mapImport: (path, dir) => {
-        if (path.startsWith(this.mount)) path = path.slice(this.mount.length)
-        if (dir.startsWith(this.mount)) dir = dir.slice(this.mount.length)
+        if (this.mount) {
+          if (path.startsWith(this.mount)) path = path.slice(this.mount.length)
+          if (dir.startsWith(this.mount)) dir = dir.slice(this.mount.length)
+        }
         return gunk.app.mapImport(path, dir)
       }
     })
