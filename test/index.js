@@ -838,7 +838,7 @@ test('should support relative imports when mount is set', async function (t) {
       { headers }
     )
 
-    t.ok(response.status === 200, 'should return status 200')
+    t.is(response.status, 200, 'should return status 200')
     t.ok(
       response.headers.get('content-type').includes('text/html'),
       'should have correct content type'
@@ -855,7 +855,7 @@ test('should support relative imports when mount is set', async function (t) {
       { headers }
     )
 
-    t.ok(response.status === 200, 'should return status 200')
+    t.is(response.status, 200, 'should return status 200')
     t.ok(
       response.headers.get('content-type').includes('application/javascript'),
       'should have correct content type'
@@ -900,7 +900,7 @@ test('should support loading from node_modules even when mount is set', async fu
     { headers }
   )
 
-  t.ok(response.status === 200, 'should return status 200')
+  t.is(response.status, 200, 'should return status 200')
   t.ok(
     response.headers.get('content-type').includes('application/javascript'),
     'should have correct content type'
