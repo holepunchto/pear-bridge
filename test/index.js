@@ -808,7 +808,7 @@ test('bridge port is 9342 for keet', async function (t) {
   })
 })
 
-test('bridge should support relative imports when mount is set', async function (t) {
+test('should support relative imports when mount is set', async function (t) {
   const originals = {
     exists: handlers.exists,
     get: handlers.get,
@@ -870,7 +870,7 @@ test('bridge should support relative imports when mount is set', async function 
   }
 })
 
-test('bridge should support loading from node_modules even when mount is set', async function (t) {
+test('should support loading from node_modules even when mount is set', async function (t) {
   const originals = {
     exists: handlers.exists,
     get: handlers.get,
